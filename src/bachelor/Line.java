@@ -9,6 +9,11 @@ public class Line {
 		this.p2 = p2;
 	}
 	
+	public Line(Line l){
+		p1 = new Point(l.getP1());
+		p2 = new Point(l.getP2());
+	}
+	
 	public double Angle2(Line l2){
 		double m1;
 		double m2;
@@ -58,6 +63,14 @@ public class Line {
 				l2.getP1().getX()-l2.getP2().getX());
 		return (Math.toDegrees(angle1 - angle2))*-1;
 	}
+	
+	public double length(){
+		double length = Math.sqrt((this.getP2().getY() - this.getP1().getY())*
+				(this.getP2().getY() - this.getP1().getY()) + 
+				(this.getP2().getX() - this.getP1().getX())*
+				(this.getP2().getX() - this.getP1().getX()));
+		return length;
+	}
 
 	public Point getP1() {
 		return p1;
@@ -84,7 +97,7 @@ public class Line {
 	}
 	
 	public String toString(){
-		return p1.toString()+" "+p2.toString();
+		return "("+p1.toString()+" "+p2.toString()+")";
 	}
 	
 	public static void main(String[] args) {
