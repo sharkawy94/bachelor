@@ -41,22 +41,6 @@ public class Line {
 		return (180+Math.toDegrees(angle1-angle2))%360;
 	}
 	public double Angle(Line l2){
-//		double m1;
-//		double m2;
-//		if(this.getP2().getX()-this.getP1().getX() == 0){
-//			m1 = 0;
-//		}
-//		else{
-//			m1 = (this.getP2().getY()-this.getP1().getY())/(this.getP2().getX()-this.getP1().getX());
-//		}
-//		if(l2.getP2().getX()-l2.getP1().getX() == 0){
-//			m2 = 0;
-//		}else{
-//			m2 = (l2.getP2().getY()-l2.getP1().getY())/(l2.getP2().getX()-l2.getP1().getX());
-//		}
-//		double angle1 = Math.atan(m1);
-//		double angle2 = Math.atan(m2);
-//		return angle1-angle2;
 		double angle1 = Math.atan2(this.getP1().getY()-this.getP2().getY(),
 				this.getP1().getX() - this.getP2().getX());
 		double angle2 = Math.atan2(l2.getP1().getY()-l2.getP2().getY(),
