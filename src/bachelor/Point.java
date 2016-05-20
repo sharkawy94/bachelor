@@ -1,5 +1,11 @@
 package bachelor;
 
+/**
+ * this class represent each point in the SVG file
+ * @author omar sharkawy
+ *
+ */
+
 public class Point {
 	double x;
 	double y;

@@ -1,5 +1,11 @@
 package bachelor;
 
+/**
+ * this class represents each power source in the SVG file
+ * @author omar
+ *
+ */
+
 public class PowerSource {
 	Point startPoint;
 	Point endPoint;

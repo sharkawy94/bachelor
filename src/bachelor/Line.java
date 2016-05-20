@@ -1,5 +1,11 @@
 package bachelor;
 
+/**
+ * this class represents each line in the SVG file
+ * @author omar sharkawy
+ *
+ */
+
 public class Line {
 	Point p1;
 	Point p2;
@@ -40,6 +46,14 @@ public class Line {
 //		return Math.toDegrees(Math.atan((m2-m1)/(1+m1*m2)));
 		return (180+Math.toDegrees(angle1-angle2))%360;
 	}
+	
+	/**
+	 * 
+	 * @param l2 Line
+	 * @return the angle in degrees between the line this method is invoked on and 
+	 * l2
+	 */
+	
 	public double Angle(Line l2){
 		double angle1 = Math.atan2(this.getP1().getY()-this.getP2().getY(),
 				this.getP1().getX() - this.getP2().getX());
@@ -47,6 +61,11 @@ public class Line {
 				l2.getP1().getX()-l2.getP2().getX());
 		return (Math.toDegrees(angle1 - angle2))*-1;
 	}
+	
+	/**
+	 * 
+	 * @return the length of the line this method is invoked on
+	 */
 	
 	public double length(){
 		double length = Math.sqrt((this.getP2().getY() - this.getP1().getY())*
@@ -59,6 +78,12 @@ public class Line {
 	public Point getP1() {
 		return p1;
 	}
+	
+	/**
+	 * 
+	 * @param l2 Line
+	 * @return a Point that intersects l2 with the line this method is invoked on
+	 */
 	
 	public Point pointOfIntersection(Line l2){
 		if(this.getP2().getX() == l2.getP1().getX() && this.getP2().getY() == l2.getP1()

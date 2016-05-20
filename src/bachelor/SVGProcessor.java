@@ -1641,7 +1641,7 @@ public class SVGProcessor {
 	 * 
 	 * @param p1 Point
 	 * @param p2 Point
-	 * @return 
+	 * @return 0 if p1 and p2 can form a horizontal line else 1
 	 */
 	
 	public static int getOrientation(Point p1 , Point p2){
@@ -1651,10 +1651,20 @@ public class SVGProcessor {
 		return 0;
 	}
 	
+	/**
+	 * sets the attribute thicknessOfLines with the thickness of the wires
+	 */
+	
 	public void setThicknessOfLines(){
 		thicknessOfLines = Math.abs(Math.abs(horizontalLines.get(0).getP1().getY()) - 
 				Math.abs(horizontalLines.get(1).getP1().getY()));
 	}
+	
+	/**
+	 * remove l from arrL
+	 * @param arrL Array of Lines
+	 * @param l line
+	 */
 	
 	public void removeThisLine(ArrayList<Line> arrL , Line l){
 		for (int i = 0; i < arrL.size(); i++) {
@@ -1672,13 +1682,19 @@ public class SVGProcessor {
 		}
 	}
 	
-	public static ArrayList<Point> sortPointsX(ArrayList<Point> p){
+	/**
+	 * 
+	 * @param arrP Array of Points
+	 * @return sorted array of Points relative to their x values
+	 */
+	
+	public static ArrayList<Point> sortPointsX(ArrayList<Point> arrP){
 		
-        int n = p.size();
+        int n = arrP.size();
         int k;
         ArrayList<Point> temp = new ArrayList();
-        for (int i = 0; i < p.size(); i++) {
-			temp.add(new Point(p.get(i)));
+        for (int i = 0; i < arrP.size(); i++) {
+			temp.add(new Point(arrP.get(i)));
 		}
         for (int m = n; m >= 0; m--) {
             for (int i = 0; i < n - 1; i++) {
@@ -1692,13 +1708,19 @@ public class SVGProcessor {
         return temp;
 	}
 	
-	public static ArrayList<Point> sortPointsY(ArrayList<Point> p){
+	/**
+	 * 
+	 * @param arrP Array of Points
+	 * @return sorted array of Points relative to their y values
+	 */
+	
+	public static ArrayList<Point> sortPointsY(ArrayList<Point> arrP){
 		
-        int n = p.size();
+        int n = arrP.size();
         int k;
         ArrayList<Point> temp = new ArrayList<Point>();
-        for (int i = 0; i < p.size(); i++) {
-			temp.add(new Point(p.get(i)));
+        for (int i = 0; i < arrP.size(); i++) {
+			temp.add(new Point(arrP.get(i)));
 		}
         for (int m = n; m >= 0; m--) {
             for (int i = 0; i < n - 1; i++) {
@@ -1711,6 +1733,12 @@ public class SVGProcessor {
         }
         return temp;
 	}
+	
+	/**
+	 * 
+	 * @param arrL Array of Lines
+	 * @return sorted array of Lines relative to their y values
+	 */
 	
 	public static ArrayList<Line> sortLinesY(ArrayList<Line> arrL){
 		int n = arrL.size();
@@ -1730,12 +1758,25 @@ public class SVGProcessor {
         return temp;
 	}
 	
-	 private static void swapLines(int i, int j, ArrayList<Line> l) {
+	/**
+	 * swap line that have index1 with line that have index2 in arrL
+	 * @param i index1
+	 * @param j index2
+	 * @param arrL Array of Lines
+	 */
+	
+	 private static void swapLines(int i, int j, ArrayList<Line> arrL) {
 	        Line temp;
-	        temp = l.get(i);
-	        l.set(i ,l.get(j));
-	        l.set(j, temp);
+	        temp = arrL.get(i);
+	        arrL.set(i ,arrL.get(j));
+	        arrL.set(j, temp);
 	    }
+	 
+	 /**
+		 * 
+		 * @param arrL Array of Lines
+		 * @return sorted array of Lines relative to their x values
+		 */
 	
 	public static ArrayList<Line> sortLinesX(ArrayList<Line> arrL){
 		int n = arrL.size();
@@ -1755,12 +1796,26 @@ public class SVGProcessor {
         return temp;
 	}
 	
-	 private static void swapPoints(int i, int j, ArrayList<Point> p) {
+	/**
+	 * swap point that have index1 with point that have index2 in arrP
+	 * @param i index1
+	 * @param j index2
+	 * @param arrP Array of Points
+	 */
+	
+	 private static void swapPoints(int i, int j, ArrayList<Point> arrP) {
         Point temp;
-        temp = p.get(i);
-        p.set(i ,p.get(j));
-        p.set(j, temp);
+        temp = arrP.get(i);
+        arrP.set(i ,arrP.get(j));
+        arrP.set(j, temp);
     }
+	 
+	/**
+	 * 
+	 * @param arrP Array of Points
+	 * @param x double to be checked with
+	 * @return array of Points that have y values smaller than x
+	 */
 	 
 	public ArrayList<Point> allPointsSmallerThanY(ArrayList<Point> arrP, double x){
 		ArrayList<Point> temp = new ArrayList<Point>();
@@ -1772,6 +1827,13 @@ public class SVGProcessor {
 		return temp;
 	}
 	
+	/**
+	 * 
+	 * @param arrP Array of Points
+	 * @param x double to be checked with
+	 * @return array of Points that have y values greater than x
+	 */
+	
 	public ArrayList<Point> allPointsGreaterThanY(ArrayList<Point> arrP, double x){
 		ArrayList<Point> temp = new ArrayList<Point>();
 		for (int i = 0; i < arrP.size(); i++) {
@@ -1781,6 +1843,11 @@ public class SVGProcessor {
 		}
 		return temp;
 	}
+	
+	/**
+	 * attach each node of the circuit to a partition and add them to the 
+	 * xPartitions, yPartitions attributes
+	 */
 	
 	public void setPartitions(){
 		int nodeOrientation = getOrientation(nodes.get(0),nodes.get(1));
@@ -1829,6 +1896,11 @@ public class SVGProcessor {
 		System.out.println("y partitions"+yPartitions);
 //		System.out.println(horizontalLines);
 	}
+	
+	/**
+	 * solves the circuit
+	 * @return
+	 */
 	 
 	public double solve(){
 		double []calculateResistance = new double[50];
@@ -1876,6 +1948,11 @@ public class SVGProcessor {
 		return 0;
 	}
 	
+	/**
+	 * 
+	 * @return A String that draws the current and voltage values of each resistor
+	 */
+	
 	public String drawValues(){
 		String s = "";
 		for (int i = 0; i < resistors.size(); i++) {
@@ -1904,6 +1981,13 @@ public class SVGProcessor {
 		}
 		return s;
 	}
+	
+	/**
+	 * 
+	 * @param r1 Resistor
+	 * @param r2 Resistor
+	 * @return true if r1 and r2 have the same orientation
+	 */
 	 
 	public double parallel(Resistor r1 , Resistor r2){
 		return ((r1.getResistanceValue()*r2.getResistanceValue())/
@@ -1978,6 +2062,10 @@ public class SVGProcessor {
 //		String s = "";
 //		
 //	}
+	
+	/**
+	 * calls the methods that makes the are needed to run the processor
+	 */
 	
 	public void init(){
 		constructRelativePoints();

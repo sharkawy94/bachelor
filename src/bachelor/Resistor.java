@@ -1,5 +1,11 @@
 package bachelor;
 
+/**
+ * this class represents each resistor in the SVG file
+ * @author omar sharkawy
+ *
+ */
+
 public class Resistor {
 	double voltageValue;
 	double currentValue;
