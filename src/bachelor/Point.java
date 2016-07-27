@@ -29,7 +29,7 @@ public class Point {
 	}
 	
 	public boolean equals(Point p){
-		if (this.x == p.x && this.y == p.y){
+		if (this.x <= p.x+1 && this.x >= p.x-1 && this.y <= p.y+1 && this.y >= p.y-1){
 			return true;
 		}
 		return false;

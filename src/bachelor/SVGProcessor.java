@@ -44,6 +44,15 @@ public class SVGProcessor {
 	private ArrayList<Line> actualHorizontalLines;
 	private ArrayList<Point> xPartitions;
 	private ArrayList<Point> yPartitions;
+	private ArrayList<Point> currentPath;
+	private ArrayList<Double> partitionsCurrent; 
+	private ArrayList<Boolean> takenPartition;
+	private ArrayList<Direction> nextVisit;
+	private ArrayList<Line> pendingCurrentPath;
+	private ArrayList<Line> currentPathCorners;
+	private ArrayList<Point> componentsBoundries;
+	private int nodesPassed = 0;
+	private int visitFrom;
 	private double horizontalSlope;
 	private double verticalSlope;
 	private Point relativeOrigin;
@@ -86,6 +95,13 @@ public class SVGProcessor {
 		actualHorizontalLines = new ArrayList<Line>();
 		xPartitions = new ArrayList<Point>();
 		yPartitions = new ArrayList<Point>();
+		currentPath = new ArrayList<Point>();
+		partitionsCurrent = new ArrayList<Double>();
+		takenPartition = new ArrayList<Boolean>();
+		nextVisit = new ArrayList<Direction>();
+		pendingCurrentPath = new ArrayList<Line>();
+		currentPathCorners = new ArrayList<Line>();
+		componentsBoundries  = new ArrayList<Point>();
 	}
 	
 	/**
@@ -279,6 +295,8 @@ public class SVGProcessor {
 	 */
 	
 	public void setOrigin(){
+		getStartTag("path");
+		getEndTag(startPathTag);
 		String s = file[startPathTag.get(0)];
 		s = s.toLowerCase();
 //		System.out.println(s);
@@ -441,7 +459,27 @@ public class SVGProcessor {
 			startLine = 0;
 			
 			while(st.hasMoreTokens()){
+				
 				s = st.nextToken();
+				if(s.charAt(0) == 'm'){
+//					constructActualPoints();
+//					actualOrigin.setX((int)((relativeOrigin.getX()*scaleX)+translateX));
+//					actualOrigin.setY((int)((relativeOrigin.getY()*scaleY)+translateY));
+//					actualPoints.add(actualOrigin);
+//					
+//					for (int i1 = 1; i1 < relativePoints.size(); i1++) {
+//						actualPoints.add(new Point((relativePoints.get(i1-1).getX()*scaleX)+
+//							actualPoints.get(i1-1).getX(),(relativePoints.get(i1-1).getY()*scaleY)+
+//								actualPoints.get(i1-1).getY()));
+//					}
+//					actualOrigin = new Point();
+//					relativePoints.clear();
+//					x = numberInString(s);
+//					s = st.nextToken();
+//					double y = numberInString(s);
+//					relativeOrigin = new Point(x,y);
+//					continue;
+				}
 				if(s.charAt(0) == 'c' || n == 6){
 					n = 6;
 				}
@@ -473,6 +511,8 @@ public class SVGProcessor {
 				}
 			}
 		}
+//		constructActualPoints();
+//		System.out.println();
 	}
 	
 	/**
@@ -483,16 +523,29 @@ public class SVGProcessor {
 	
 	public static double numberInString(String s){
 		String temp = "";
+		boolean contain = false;
 		for (int i = 0; i < s.length(); i++) {
 			if((s.charAt(i) >= '0' && s.charAt(i) <= '9')||(s.charAt(i) == '-')
 					||(s.charAt(i) == '.')){
 				temp += s.charAt(i);
+				contain = true;
 			}
 //			else{
 //				break;
 //			}
 		}
-		double number = Double.parseDouble(temp);
+		if(temp.length() == 0 || !contain){
+			return -1;
+		}
+		double number;
+		
+		try{
+			number = Double.parseDouble(temp);
+		}
+		catch(Exception e){
+			number = 0;
+		}
+		
 		return number;
 	}
 	
@@ -741,26 +794,26 @@ public class SVGProcessor {
 		String s="";
 		
 		for (int i = 0; i < actualPoints.size(); i++) {
-			if(i!=0 && i < actualPoints.size()-2 && 
-					lines.get(i-1).Angle(lines.get(i)) >= 60
-					&& lines.get(i-1).Angle(lines.get(i)) < 75){
-//				System.out.println("resistor boundry: "+ lines.get(i-1).pointOfIntersection(lines.get(i)));
-//			s +="<path d=\"m"+(Math.floor(actualPoints.get(i).getX())-5)+" "+(Math.floor(actualPoints.get(i).getY()))+
-//					" l0 5 l10 0 l0 -10 l-10 0 l0 5z\" fill=\"red\"/>";
-			}
-			else if(i!=0 && i < actualPoints.size()-2 && 
-					((Math.abs(lines.get(i-1).Angle(lines.get(i))) >= 85
-					&& Math.abs(lines.get(i-1).Angle(lines.get(i))) <= 95)
-					||(Math.abs(lines.get(i-1).Angle(lines.get(i))) >= 265
-							&& Math.abs(lines.get(i-1).Angle(lines.get(i))) <= 275))){
-//				s +="<path d=\"m"+(Math.floor(actualPoints.get(i).getX())-5)+" "+(Math.floor(actualPoints.get(i).getY()))+
-//						" l0 5 l10 0 l0 -10 l-10 0 l0 5z\" fill=\"blue\"/>";
-//				point90Deg.add(new Point(lines.get(i-1).pointOfIntersection(lines.get(i))));
-			}
-			else{
+//			if(i!=0 && i < actualPoints.size()-2 && 
+//					lines.get(i-1).Angle(lines.get(i)) >= 60
+//					&& lines.get(i-1).Angle(lines.get(i)) < 75){
+////				System.out.println("resistor boundry: "+ lines.get(i-1).pointOfIntersection(lines.get(i)));
+////			s +="<path d=\"m"+(Math.floor(actualPoints.get(i).getX())-5)+" "+(Math.floor(actualPoints.get(i).getY()))+
+////					" l0 5 l10 0 l0 -10 l-10 0 l0 5z\" fill=\"red\"/>";
+//			}
+//			else if(i!=0 && i < actualPoints.size()-2 && 
+//					((Math.abs(lines.get(i-1).Angle(lines.get(i))) >= 85
+//					&& Math.abs(lines.get(i-1).Angle(lines.get(i))) <= 95)
+//					||(Math.abs(lines.get(i-1).Angle(lines.get(i))) >= 265
+//							&& Math.abs(lines.get(i-1).Angle(lines.get(i))) <= 275))){
+////				s +="<path d=\"m"+(Math.floor(actualPoints.get(i).getX())-5)+" "+(Math.floor(actualPoints.get(i).getY()))+
+////						" l0 5 l10 0 l0 -10 l-10 0 l0 5z\" fill=\"blue\"/>";
+////				point90Deg.add(new Point(lines.get(i-1).pointOfIntersection(lines.get(i))));
+//			}
+//			else{
 				s +="<path d=\"m"+(Math.floor(actualPoints.get(i).getX())-5)+" "+(Math.floor(actualPoints.get(i).getY()))+
 						" l0 5 l10 0 l0 -10 l-10 0 l0 5z\" fill=\"green\"/>";
-			}
+//			}
 //			if(i>1 && i < actualPoints.size()-2 && 
 //					Math.abs(lines.get(i-1).Angle(lines.get(i))) == 90
 //					|| Math.abs(lines.get(i-1).Angle(lines.get(i))) == 270){
@@ -776,16 +829,19 @@ public class SVGProcessor {
 //		constructVerticalLines();
 //		s+= drawVerticalLines();
 //		constructResistorPoints();
-		s += drawResistorPoints();
+//		s += drawResistorPoints();
 //		
 //		constructPowerSourcePoints();
-		s += drawPowerSourcePoints();
+//		s += drawPowerSourcePoints();
 		
-		s += drawCornerPoints();
-		s += drawNodes();
-		s += drawValues(); 
+//		s += drawCornerPoints();
+//		s += drawNodes();
+		s += drawValues();
+		s += drawComponentsBoundries();
+//		s += drawLines();
 //		s += drawActualVerticalLines();
 //		s += drawActualHorizontalLines();
+//		s += drawCurrentPath();
 		try {
 
 			PrintWriter writer = new PrintWriter("C:/Users/omar/Desktop/bachelor/output.svg", "UTF-8");
@@ -825,27 +881,27 @@ public class SVGProcessor {
 	 * then adds them to the actualPoints attribute
 	 */
 	
-	public void constructActualPoints(){
-//		for (int i = relativePoints.size()-1; i > 0; i--) {
-//			relativePoints.set(i, relativePoints.get(i-1));
-//		}
-//		relativePoints.add(0, relativeOrigin);
-		actualOrigin.setX((int)((relativeOrigin.getX()*scaleX)+translateX));
-		actualOrigin.setY((int)((relativeOrigin.getY()*scaleY)+translateY));
-		actualPoints.add(actualOrigin);
-//		System.out.println(actualOrigin);
-//		actualPoints.add(new Point((int)(relativePoints.get(0).getX()*scaleX)+
-//				actualOrigin.getX(),(int)(relativePoints.get(0).getY()*scaleY)+
-//				actualOrigin.getY()));
-		
-		for (int i = 1; i < relativePoints.size(); i++) {
-			actualPoints.add(new Point((relativePoints.get(i-1).getX()*scaleX)+
-				actualPoints.get(i-1).getX(),(relativePoints.get(i-1).getY()*scaleY)+
-					actualPoints.get(i-1).getY()));
+		public void constructActualPoints(){
+	//		for (int i = relativePoints.size()-1; i > 0; i--) {
+	//			relativePoints.set(i, relativePoints.get(i-1));
+	//		}
+	//		relativePoints.add(0, relativeOrigin);
+			actualOrigin.setX((int)((relativeOrigin.getX()*scaleX)+translateX));
+			actualOrigin.setY((int)((relativeOrigin.getY()*scaleY)+translateY));
+			actualPoints.add(actualOrigin);
+	//		System.out.println(actualOrigin);
+	//		actualPoints.add(new Point((int)(relativePoints.get(0).getX()*scaleX)+
+	//				actualOrigin.getX(),(int)(relativePoints.get(0).getY()*scaleY)+
+	//				actualOrigin.getY()));
+			
+			for (int i = 1; i < relativePoints.size(); i++) {
+				actualPoints.add(new Point((relativePoints.get(i-1).getX()*scaleX)+
+					actualPoints.get(i-1).getX(),(relativePoints.get(i-1).getY()*scaleY)+
+						actualPoints.get(i-1).getY()));
+			}
+	//		actualPoints.add(actualPoints.get(0));
 		}
-//		actualPoints.add(actualPoints.get(0));
-	}
-	
+
 	public void writeTag(Line l1){
 		int diff = (int)(l1.getP2().getX() - l1.getP1().getX());
 		String s = "<g fill=\"#00ff00\" stroke=\"none\">";
@@ -1069,6 +1125,26 @@ public class SVGProcessor {
 		return s;
 	}
 	
+	public String drawLines(){
+		String s = "";
+		for (int i = 0; i < lines.size(); i++) {
+			String color = "red";
+			int diffx = (int)Math.floor(lines.get(i).getP1().getX()-lines.get(i).getP2().getX());
+			int diffy = (int)Math.floor(lines.get(i).getP1().getY()-lines.get(i).getP2().getY());
+
+//			s+="<path d=\"m"+(int)(Math.ceil(lines.get(i).getP2().getX()))+" "+
+//					(int)(Math.ceil(lines.get(i).getP2().getY()))+
+//					" l"+diffx+" "+diffy+" l0 2 l-"+diffx+" -"+diffy+" 0 l0 -2z\" fill=\""+color+"\"/>";
+//			Point minx = new Point(getMinX(lines.get(i).getP1(),lines.get(i).getP2()));
+//			Point miny = new Point(getMinY(lines.get(i).getP1(),lines.get(i).getP2()));
+//			s +="<path d=\"m"+(Math.floor(lines.get(i).getP1().getX())-5)+" "+(Math.floor(lines.get(i).getP1().getY()))+
+//					" l0 5 l10 0 l0 -10 l-10 0 l0 5z\" fill=\"red\"/>";
+//			s +="<path d=\"m"+(Math.floor(lines.get(i).getP2().getX())-5)+" "+(Math.floor(lines.get(i).getP2().getY()))+
+//					" l0 5 l10 0 l0 -10 l-10 0 l0 5z\" fill=\"blue\"/>";
+		}
+		return s;
+	}
+	
 	/**
 	 * remove p1 from arrP
 	 * @param arrP array of Points
@@ -1095,7 +1171,20 @@ public class SVGProcessor {
 		double diffSoFar = 10000;
 		int index = -1;
 		for (int i = 0; i < arrP.size(); i++) {
-			double diff = Math.abs(p.getX()) - Math.abs(arrP.get(i).getX());
+			double diff = Math.abs(Math.abs(p.getX()) - Math.abs(arrP.get(i).getX()));
+			if(diff < diffSoFar){
+				diffSoFar = diff;
+				index = i;
+			}
+		}
+		return index;
+	}
+	
+	public int getClosestY(Point p , ArrayList<Point> arrP){
+		double diffSoFar = 10000;
+		int index = -1;
+		for (int i = 0; i < arrP.size(); i++) {
+			double diff = Math.abs(Math.abs(p.getY()) - Math.abs(arrP.get(i).getY()));
 			if(diff < diffSoFar){
 				diffSoFar = diff;
 				index = i;
@@ -1213,7 +1302,7 @@ public class SVGProcessor {
 	
 	/**
 	 * 
-	 * @return A String that draws squars on the corner points
+	 * @return A String that draws squares on the corner points
 	 */
 	
 	public String drawCornerPoints(){
@@ -1645,10 +1734,25 @@ public class SVGProcessor {
 	 */
 	
 	public static int getOrientation(Point p1 , Point p2){
-		if(appEqual(p1.getX(), p2.getX(), 1.5)){
-		return 1;
+		double xDiff = Math.abs((p1.getX() - p2.getX()));
+		double yDiff = Math.abs((p1.getY() - p2.getY()));
+		if(xDiff > yDiff){
+			return 0;
 		}
-		return 0;
+		return 1;
+//		if(appEqual(p1.getX(), p2.getX(), 1.5)){
+//		return 1;
+//		}
+//		return 0;
+	}
+	
+	public static int resistorOrientation(Resistor r){
+		double xDiff = Math.abs((r.getStartPoint().getX() - r.getEndPoint().getX()));
+		double yDiff = Math.abs((r.getStartPoint().getY() - r.getEndPoint().getY()));
+		if(xDiff > yDiff){
+			return 0;
+		}
+		return 1;
 	}
 	
 	/**
@@ -1856,6 +1960,8 @@ public class SVGProcessor {
 				if(i == 0){
 				yPartitions.add(new Point(horizontalLines.get(0).getP1().getY()
 						,nodes.get(i).getY()-thicknessOfLines));
+				yPartitions.add(new Point(nodes.get(i).getY()-thicknessOfLines+1,
+						nodes.get(i).getY()+thicknessOfLines));
 //				i++;
 				}
 				else{
@@ -1865,7 +1971,7 @@ public class SVGProcessor {
 //					i++;
 					}
 					else{
-						yPartitions.add(new Point(nodes.get(i).getY()
+						yPartitions.add(new Point(nodes.get(i).getY()+thicknessOfLines+1
 								,horizontalLines.get(horizontalLines.size()-1).getP1().getY()));
 					}
 				}
@@ -1893,8 +1999,27 @@ public class SVGProcessor {
 		}
 //		System.out.println("x partitions size"+xPartitions.size());
 //		System.out.println("y partitions size"+yPartitions.size());
-		System.out.println("y partitions"+yPartitions);
+//		System.out.println("y partitions"+yPartitions);
 //		System.out.println(horizontalLines);
+	}
+	
+	public void setPartitionsCurrent(){
+		double r = 0;
+		for (int i = 0; i < yPartitions.size(); i++) {
+			for (int j = 0; j < resistors.size(); j++) {
+				if(resistors.get(j).getStartPoint().getY() >= 
+						yPartitions.get(i).getX() &&
+						resistors.get(j).getStartPoint().getY() <= 
+						yPartitions.get(i).getY()){
+					r = resistors.get(j).getCurrentValue();
+					break;
+				}
+			}
+			if(r != 0){
+				partitionsCurrent.add(r);
+			}
+			r = 0;
+		}
 	}
 	
 	/**
@@ -1956,31 +2081,845 @@ public class SVGProcessor {
 	public String drawValues(){
 		String s = "";
 		for (int i = 0; i < resistors.size(); i++) {
-			int orientation = getOrientation(resistors.get(i).getStartPoint()
-					,resistors.get(i).getEndPoint());
+			int orientation = resistorOrientation(resistors.get(i));
 			if(orientation == 0){
 				double midx = mean(resistors.get(i).getStartPoint().getX(),
 						resistors.get(i).getEndPoint().getX());
-				midx = Math.floor(midx);
+				midx = Math.floor(midx)-35;
 				double height = resistors.get(i).getStartPoint().getY()+thicknessOfLines*8;
-				height = Math.floor(height);
-				s += "<text x=\""+midx+"\" y=\""+height+"\" fill=\"red\">"+
-				resistors.get(i).getVoltageValue()+" V , "+
-				resistors.get(i).getCurrentValue()+" A</text>";
+				height = Math.floor(height)+20;
+				s += "<text font-size=\"40\" x=\""+midx+"\" y=\""+height+"\" fill=\"red\">"+
+						String.format("%.2f", resistors.get(i).getVoltageValue())+" V , "+
+						String.format("%.2f", resistors.get(i).getCurrentValue())+" A "
+						+String.format("%.2f", resistors.get(i).getResistanceValue())+" ohms</text>";
+//				System.out.println(i);
 			}
 			else{
 				double midy = mean(resistors.get(i).getStartPoint().getY(),
 						resistors.get(i).getEndPoint().getY());
 				midy = Math.floor(midy);
-				double height = resistors.get(i).getStartPoint().getX()-thicknessOfLines*8;
+				double height = resistors.get(i).getStartPoint().getX()+thicknessOfLines*8;
+//				if (i == resistors.size()-1)
+//					height = resistors.get(i).getStartPoint().getX()-thicknessOfLines*16;
 				height = Math.floor(height);
-				s += "<text x=\""+height+"\" y=\""+midy+"\" fill=\"red\">"+
-						resistors.get(i).getVoltageValue()+" V , "+
-						resistors.get(i).getCurrentValue()+" A</text>";
+				s += "<text font-size=\"40\" x=\""+height+"\" y=\""+midy+"\" fill=\"red\">"+
+						String.format("%.2f",resistors.get(i).getVoltageValue())+" V , "+
+						String.format("%.2f",resistors.get(i).getCurrentValue())+" A</text>";
 			}
 		}
 		return s;
 	}
+	
+	public void constructCurrentPath(){
+		ArrayList<Point> tempCornerPoints = new ArrayList<Point>();
+		for (int i = 0; i < cornerPoints.size(); i++) {
+			tempCornerPoints.add(new Point(cornerPoints.get(i)));
+		}
+		Point currentPoint ;
+		int powerSourceOrientation = 
+				getOrientation(powerSource.startPoint,powerSource.endPoint);
+		
+		if(powerSourceOrientation == 0){
+			nextVisit.add(Direction.Left);
+			ArrayList<Point> temp = get90PointOnLeft(tempCornerPoints,powerSource.startPoint);
+			currentPoint = new Point(midPoint(temp.get(0),temp.get(1)));
+			
+			currentPath.add(new Point(currentPoint));
+			currentPathCorners.add(new Line(temp.get(0),temp.get(1)));
+//			currentPath.add(new Point(temp.get(0)));
+//			currentPath.add(new Point(temp.get(1)));
+
+//		while(!appEqual(currentPath.get(currentPath.size()-1).getX(),powerSource.endPoint.getX(),1.5*thicknessOfLines)){
+//			setNextVisit();
+//			configurePath(tempCornerPoints);
+//		}
+			setNextVisit();
+			configurePath(tempCornerPoints);
+			setNextVisit();
+			configurePath(tempCornerPoints);
+			setNextVisit();
+			configurePath(tempCornerPoints);
+			setNextVisit();
+			configurePath(tempCornerPoints);
+			setNextVisit();
+			configurePath(tempCornerPoints);
+			setNextVisit();
+			configurePath(tempCornerPoints);
+			setNextVisit();
+			configurePath(tempCornerPoints);
+			setNextVisit();
+			
+		adjustNodesInCurrentPath();
+//		nodes.clear();
+//		nodes.add(currentPath.get(currentPath.size()-2));
+		
+//		for (int i = 0; i < currentPathCorners.size(); i++) {
+//			nodes.add(currentPathCorners.get(i).getP1());
+//			nodes.add(currentPathCorners.get(i).getP2());
+//		}
+//		System.out.println("number of corners left :"+tempCornerPoints.size());
+//		System.out.println("number of corners : "+currentPathCorners.size());
+		}
+		else{
+			
+		}
+		
+	}
+	
+//	public void end(){
+//		
+//	}
+	
+	public void configurePath(ArrayList<Point> tempCornerPoints){
+		int numberOfBranches = 0;
+		for (int i = 0; i < nextVisit.size(); i++) {
+			
+			Direction next = nextVisit.get(i);
+			ArrayList<Point> target = new ArrayList<Point>();
+			
+			if(next == Direction.Left){
+				target = get90PointOnLeft(tempCornerPoints,currentPath.get(currentPath.size()-1-numberOfBranches));
+			}
+			if(next == Direction.Up){
+				target = get90PointOnTop(tempCornerPoints,currentPath.get(currentPath.size()-1-numberOfBranches));
+			}
+			if(next == Direction.Right){
+				target = get90PointOnRight(tempCornerPoints,currentPath.get(currentPath.size()-1-numberOfBranches));
+			}
+			if(next == Direction.Down){
+				target = get90PointOnBottom(tempCornerPoints,currentPath.get(currentPath.size()-1-numberOfBranches));
+			}
+			if(target != null){
+				numberOfBranches++;
+				if(numberOfBranches > 1){
+					if(checkResistorInPath(target , numberOfBranches)){
+//						System.out.println("hey");
+						addResistorToCurrentPath(target , numberOfBranches);
+					}
+					else{
+//						System.out.println("hi");
+						pendingCurrentPath.add(new Line(new Point(currentPath.get(currentPath.size()-numberOfBranches)),new Point(midPoint(target.get(0),target.get(1)))));
+						pendingCurrentPath.add(new Line(new Point(currentPath.get(currentPath.size()-2)),new Point(currentPath.get(currentPath.size()-1))));
+						currentPath.remove(currentPath.size()-1);
+//						currentPath.remove(currentPath.size()-1);
+						for (int j = 0; j < pendingCurrentPath.size(); j++) {
+							currentPath.add(pendingCurrentPath.get(j).getP1());
+							currentPath.add(pendingCurrentPath.get(j).getP2());
+						}
+						Line temp = currentPathCorners.remove(currentPathCorners.size()-1);
+						currentPathCorners.add(new Line(target.get(0),target.get(1)));
+						currentPathCorners.add(temp);
+					}
+				}
+				else{
+					if(checkResistorInPath(target , numberOfBranches)){
+//						System.out.println("hey");
+						addResistorToCurrentPath(target , numberOfBranches);
+						currentPathCorners.add(new Line(target.get(0),target.get(1)));
+//						removeThisPoint(tempCornerPoints,target.get(0));
+//						removeThisPoint(tempCornerPoints,target.get(1));
+					}
+					else{
+						currentPath.add(midPoint(target.get(0),target.get(1)));
+						currentPathCorners.add(new Line(target.get(0),target.get(1)));
+					}
+				}
+			}
+		}
+	}
+	
+	public Point checkNodesInPath(Point p1 , Point p2){
+		for (int i = 0; i < nodes.size(); i++) {
+			if(nodes.get(i).getX() < p1.getX()-thicknessOfLines && 
+					nodes.get(i).getX() > p2.getX()+thicknessOfLines &&
+					nodes.get(i).getY() < p1.getY()-thicknessOfLines && 
+					nodes.get(i).getY() > p2.getY()+thicknessOfLines){
+				return new Point(nodes.get(i));
+			}
+		}
+		return null;
+	}
+	
+	public void addResistorToCurrentPath(ArrayList<Point> target , int numberOfBranches){
+		boolean node = false;
+		Point temp1 = null;
+		Point temp2 = null;
+		for (int i = 0; i < nodes.size(); i++) {
+			if(midPoint(target.get(0),target.get(1)).equals(nodes.get(i))){
+				node = true;
+				break;
+			}
+		}
+		ArrayList<Point> start = new ArrayList<Point>();
+		int cornersToGet = 0;
+		if(numberOfBranches <= 1){
+			cornersToGet = 1;
+		}
+		else{
+			cornersToGet = 2;
+		}
+		start.add(new Point(currentPathCorners.get(currentPathCorners.size()-cornersToGet).getP1()));
+		start.add(new Point(currentPathCorners.get(currentPathCorners.size()-cornersToGet).getP2()));
+		int orientation = getOrientation(start.get(0),target.get(0));
+		if(orientation == 1){
+			int index = getClosestX(target.get(0),start);
+			start.remove(index);
+			int count = start.size()-1;
+			do{
+				if(currentPathCorners.get(currentPathCorners.size()-cornersToGet).getP1().getY()>target.get(0).getY())
+				setPointWithinRangeY(start.get(start.size()-1),midPoint(target.get(0),target.get(1)),
+					start);
+//				else
+//					setPointWithinRangeY2(start.get(start.size()-1),getMaxX(target.get(0),target.get(1)),
+//							start);
+				count++;
+			}while(start.size()>count);
+			if(currentPathCorners.get(currentPathCorners.size()-cornersToGet).getP1().getY()<target.get(0).getY()){
+//				nodes.add(getMaxX(target.get(0),target.get(1)));
+				for (int i = 0; i < 50; i++) {
+					setPointWithinRangeY2(start.get(start.size()-1),getMaxX(target.get(0),target.get(1)),
+							start);
+				}
+				ArrayList<Point> temp3 = new ArrayList<Point>();
+				temp3.add(start.get(0));
+				for (int i = start.size()-1; i >0 ; i--) {
+					temp3.add(start.get(i));
+				}
+				start.clear();
+				start.addAll(temp3);
+				System.out.println("shit2");
+			}
+			if(start.get(0).getX() < midPoint(target.get(0),target.get(1)).getX()){
+				for (int i = 0; i < start.size(); i++) {
+					start.set(i,new Point(start.get(i).getX() + thicknessOfLines/2,
+							start.get(i).getY()));
+				}
+			}
+			else{
+				for (int i = 0; i < start.size(); i++) {
+					start.set(i,new Point(start.get(i).getX() - thicknessOfLines/2,
+							start.get(i).getY()));
+				}
+			}
+//			if(numberOfBranches > 1){
+//				temp1 = currentPath.remove(currentPath.size()-1);
+//				temp2 = currentPath.remove(currentPath.size()-1);
+//			}
+			start.set(0, midPoint(currentPathCorners.get(currentPathCorners.size()-cornersToGet).getP1(),
+					currentPathCorners.get(currentPathCorners.size()-cornersToGet).getP2()));
+			start.add(midPoint(target.get(0),target.get(1)));
+			if(numberOfBranches <= 1){
+				for (int i = 0; i < start.size(); i++) {
+					currentPath.add(new Point(start.get(i)));
+				}
+			}
+			else{
+				for (int i = 0; i < start.size()-1; i++) {
+					pendingCurrentPath.add(new Line(new Point(start.get(i)),new Point(start.get(i))));
+				}
+			}
+//			if(numberOfBranches > 1){
+//				currentPath.add(temp2);
+//				currentPath.add(temp1);
+//			}
+		}
+		else{
+			int index = getClosestY(target.get(0),start);
+			start.remove(index);
+			int count = start.size()-1;
+			do{
+				setPointWithinRangeX(start.get(start.size()-1),midPoint(target.get(0),target.get(1)),
+					start);
+				count++;
+			}while(start.size()>count);
+			if(start.get(0).getY() < midPoint(target.get(0),target.get(1)).getY()){
+				for (int i = 0; i < start.size(); i++) {
+					start.set(i,new Point(start.get(i).getX(),
+							start.get(i).getY() + thicknessOfLines/2));
+				}
+			}
+			else{
+				for (int i = 0; i < start.size(); i++) {
+					start.set(i,new Point(start.get(i).getX(),
+							start.get(i).getY() - thicknessOfLines/2));
+				}
+			}
+//			if(numberOfBranches > 1){
+//				temp1 = currentPath.remove(currentPath.size()-1);
+//				temp2 = currentPath.remove(currentPath.size()-1);
+//			}
+			start.set(0, midPoint(currentPathCorners.get(currentPathCorners.size()-cornersToGet).getP1(),
+					currentPathCorners.get(currentPathCorners.size()-cornersToGet).getP2()));
+			start.add(midPoint(target.get(0),target.get(1)));
+			if(numberOfBranches <= 1){
+				for (int i = 0; i < start.size(); i++) {
+					currentPath.add(new Point(start.get(i)));
+				}
+			}
+			else{
+				for (int i = 0; i < start.size()-1; i++) {
+					pendingCurrentPath.add(new Line(new Point(start.get(i)),new Point(start.get(i+1))));
+				}
+			}
+//			if(numberOfBranches > 1){
+//				currentPath.add(temp2);
+//				currentPath.add(temp1);
+//			}
+		}
+	}
+	
+	public void setPointWithinRangeY(Point p1 , Point target, ArrayList<Point> temp){
+		if(p1.getY()>target.getY()){
+		Point min = getMinY(p1,target);
+		Point max = getMaxY(p1,target);
+		for (int i = 0; i < lines.size(); i++) {
+			if(lines.get(i).getP1().equals(p1) && 
+					lines.get(i).getP2().getY() > min.getY() &&
+					lines.get(i).getP2().getY() < max.getY()){
+				temp.add(new Point(lines.get(i).getP2()));
+				return;
+			}
+			if(lines.get(i).getP2().equals(p1) && 
+					lines.get(i).getP1().getY() > min.getY() &&
+					lines.get(i).getP1().getY() < max.getY()){
+				temp.add(new Point(lines.get(i).getP1()));
+				return;
+			}
+		}
+		}
+		else{
+			Point min = getMinY(p1,target);
+			Point max = getMaxY(p1,target);
+			for (int i = 0; i < lines.size(); i++) {
+				if(lines.get(i).getP1().equals(target) && 
+						lines.get(i).getP2().getY() > min.getY() &&
+						lines.get(i).getP2().getY() < max.getY()){
+					temp.add(new Point(lines.get(i).getP2()));
+					return;
+				}
+				if(lines.get(i).getP2().equals(target) && 
+						lines.get(i).getP1().getY() > min.getY() &&
+						lines.get(i).getP1().getY() < max.getY()){
+					temp.add(new Point(lines.get(i).getP1()));
+					return;
+				}
+			}
+		}
+	}
+	
+	public void setPointWithinRangeY2(Point p1 , Point target, ArrayList<Point> temp){
+//		System.out.println("shit");
+		Point min = getMinY(p1,target);
+		Point max = getMaxY(p1,target);
+		for (int i = lines.size()-1; i >= 0; i--) {
+//			if(lines.get(i).getP2().equals(target))
+//				System.out.println("true");
+			Point rTemp = lines.get(i).getP1();
+			Point rTemp2 = lines.get(i).getP2();
+			if(lines.get(i).getP1().equals(target) && 
+					lines.get(i).getP2().getY() > min.getY() &&
+					lines.get(i).getP2().getY() < max.getY() 
+					/*&& 
+					lines.get(i).getP2().getX() >= max.getX()-1*/){
+//				if(temp.size()>0){
+//					if(lines.get(i).getP2().getY()<temp.get(temp.size()-1).getY())
+//						temp.add(new Point(lines.get(i).getP2()));
+//				}
+				temp.add(new Point(lines.get(i).getP2()));
+				return;
+			}
+			if(lines.get(i).getP2().equals(target) && 
+					lines.get(i).getP1().getY() > min.getY() &&
+					lines.get(i).getP1().getY() < max.getY() /*&&
+					lines.get(i).getP2().getX() >= max.getX()-1*/){
+//				if(temp.size()>0){
+//					if(lines.get(i).getP1().getY()<temp.get(temp.size()-1).getY())
+//						temp.add(new Point(lines.get(i).getP1()));
+//				}
+				temp.add(new Point(lines.get(i).getP1()));
+				return;
+			}
+		}
+	}
+	
+	public void setPointWithinRangeX(Point p1 , Point target, ArrayList<Point> temp){
+		Point min = getMinX(p1,target);
+		Point max = getMaxX(p1,target);
+		for (int i = 0; i < lines.size(); i++) {
+			if(lines.get(i).getP1().equals(p1) && 
+					lines.get(i).getP2().getX() > min.getX() &&
+					lines.get(i).getP2().getX() < max.getX()){
+				temp.add(new Point(lines.get(i).getP2()));
+				return;
+			}
+			if(lines.get(i).getP2().equals(p1) && 
+					lines.get(i).getP1().getX() > min.getX() &&
+					lines.get(i).getP1().getX() < max.getX()){
+				temp.add(new Point(lines.get(i).getP1()));
+				return;
+			}
+		}
+	}
+
+	
+	public String drawCurrentPath(){
+//		for (int i = 0; i < pendingCurrentPath.size(); i++) {
+//			currentPath.add(e)
+//		}
+		ArrayList<Point> temp2 = new ArrayList<Point>();
+		for (int i = currentPath.size()-1; i >= 0; i--) {
+			temp2.add(currentPath.get(i));
+		}
+		String s = "";
+		for (int i = 0; i < temp2.size()-1; i++) {
+			s += "<polyline points=\"";
+
+			s += temp2.get(i).getX()+" "+temp2.get(i).getY()+" ";
+			s += temp2.get(i+1).getX()+" "+temp2.get(i+1).getY();
+//			if(i != currentPath.size()-1){
+//				s += " ";
+//			}
+			if(temp2.get(i+1).getY()<yPartitions.get(2).getY() &&
+					temp2.get(i+1).getY()>yPartitions.get(2).getX() )
+			s += "\" stroke=\"pink\" stroke-width=\"8\" stroke-linecap=\"round\" fill=\"none\" stroke-linejoin=\"round\"/>";
+			else
+				s += "\" stroke=\"pink\" stroke-width=\"4\" stroke-linecap=\"round\" fill=\"none\" stroke-linejoin=\"round\"/>";
+
+		}
+//		System.out.println(yPartitions);
+//		ArrayList<Point> temp = new ArrayList<Point>();
+//		for (int i = pendingCurrentPath.size()-1; i >=0 ; i--) {
+//			temp.add(pendingCurrentPath.get(i).getP1());
+//			temp.add(pendingCurrentPath.get(i).getP2());
+//		}
+//		s += "<polyline points=\"";
+//
+//		for (int i = 0; i < temp.size()-1; i++) {
+//
+//			s += temp.get(i).getX()+" "+temp.get(i).getY()+" ";
+//			s += temp.get(i+1).getX()+" "+temp.get(i+1).getY();
+//			if(i != temp.size()-1){
+//				s += " ";
+//			}
+////			i++;
+//
+//		}
+//		s += "\" stroke=\"blue\" stroke-width=\"5\" stroke-linecap=\"round\" fill=\"none\" stroke-linejoin=\"round\"/>";
+
+		s += "<polyline points=\"";
+		for (int i = pendingCurrentPath.size()-1; i >= 0; i--) {
+			
+//			if(i==0)
+//			s += pendingCurrentPath.get(i).getP1().getX()+" "+
+//					pendingCurrentPath.get(i).getP1().getY()+" "+
+//					pendingCurrentPath.get(i).getP2().getX()+" "+
+//					pendingCurrentPath.get(i).getP2().getY();
+//			else{
+				s += pendingCurrentPath.get(i).getP2().getX()+" "+
+						pendingCurrentPath.get(i).getP2().getY()+" "+
+						pendingCurrentPath.get(i).getP1().getX()+" "+
+						pendingCurrentPath.get(i).getP1().getY();
+//			}
+			if(i != 0){
+				s += " ";
+			}
+
+		}
+		s += "\" stroke=\"pink\" stroke-width=\"4\" stroke-linecap=\"round\" fill=\"none\" stroke-linejoin=\"round\"/>";
+
+
+		return s;
+	}
+	
+	
+	
+	public boolean checkResistorInPath(ArrayList<Point> target , int numberOfBranches){
+		Point boundry1 = null;
+//		System.out.println("number of branches "+numberOfBranches);
+		if(numberOfBranches <= 1){
+			boundry1 = new Point(currentPath.get(currentPath.size()-1));
+		}
+		else{
+			boundry1 = new Point(currentPath.get(currentPath.size()-3));
+		}
+		Point boundry2 = target.get(0);
+		int orientation = getOrientation(boundry1,boundry2);
+		
+		if(orientation ==0){
+			Point min = new Point(getMinX(boundry1,boundry2));
+			Point max = new Point(getMaxX(boundry1,boundry2));
+			
+			for (int i = 0; i < resistors.size(); i++) {
+					if(resistors.get(i).startPoint.getX() >= min.getX() &&
+							resistors.get(i).startPoint.getX() <= max.getX() &&
+							resistors.get(i).startPoint.getY() <= 
+							min.getY()+1.5*thicknessOfLines && 
+							resistors.get(i).startPoint.getY() >= 
+							min.getY()-1.5*thicknessOfLines){
+						return true;
+					}
+			}
+		}
+		else{
+			Point min = new Point(getMinY(boundry1,boundry2));
+			Point max = new Point(getMaxY(boundry1,boundry2));
+			for (int i = 0; i < resistors.size(); i++) {
+				if(resistors.get(i).startPoint.getY() >= min.getY() &&
+						resistors.get(i).startPoint.getY() <= max.getY() &&
+						resistors.get(i).startPoint.getX() <= 
+						min.getX()+1.5*thicknessOfLines && 
+						resistors.get(i).startPoint.getX() >= 
+						min.getX()-1.5*thicknessOfLines){
+					return true;
+				}
+			}
+		}
+//		}
+		return false;
+	}
+	
+	
+	
+	public void setNextVisit(){
+		nextVisit.clear();
+		if(visitFrom == 1){
+			nextVisit.add(Direction.Down);
+			nextVisit.add(Direction.Left);
+			nextVisit.add(Direction.Right);
+			return;
+		}
+		if(visitFrom == 2){
+			
+			nextVisit.add(Direction.Left);
+			nextVisit.add(Direction.Down);
+			nextVisit.add(Direction.Up);
+			return;
+		}
+		if(visitFrom == 3 ){
+			nextVisit.add(Direction.Up);
+			nextVisit.add(Direction.Right);
+			nextVisit.add(Direction.Left);
+			return;
+		}
+		if(visitFrom == 4){
+			nextVisit.add(Direction.Right);
+			nextVisit.add(Direction.Up);
+			nextVisit.add(Direction.Down);
+			return;
+		}
+		
+	}
+	
+	
+	public ArrayList<Point> resistorsBetweenH(Point p1 , Point p2){
+
+		ArrayList<Point> temp = null;
+		Point max = getMaxX(p1,p2);
+		Point min = getMinX(p1,p2);
+		for (int i = 0; i < resistors.size(); i++) {
+			if(resistors.get(i).getStartPoint().getX() < max.getX() && 
+					resistors.get(i).getStartPoint().getX() > min.getX()){
+				temp.add(resistors.get(i).getStartPoint());
+				temp.add(resistors.get(i).getEndPoint());
+				return temp;
+			}
+		}
+		return temp;
+	}
+	
+	public int numberOfNodesInPath(){
+		int number = 0;
+		for (int i = 0; i < nodes.size(); i++) {
+			for (int j = 0; j < currentPath.size(); j++) {
+				if(nodes.get(i).equals(currentPath.get(j))){
+					number++;
+					continue;
+				}
+			}
+		}
+//		System.out.println(number);
+		return number;
+	}
+	
+	public ArrayList<Point> get90PointOnLeft(ArrayList<Point> tempCornerPoints,Point p){
+		ArrayList<Point> temp = new ArrayList<Point>();
+		for (int i = 0; i < tempCornerPoints.size(); i++) {
+			if(appEqual(tempCornerPoints.get(i).getY(),p.getY(),1.2*thicknessOfLines) &&
+					tempCornerPoints.get(i).getX() < p.getX()-thicknessOfLines){
+				temp.add(new Point(tempCornerPoints.get(i)));
+				
+//				if(temp.size() == 2){
+//					return temp;
+//				}
+			}
+		}
+		if(temp.size() < 2){
+			return null;
+		}
+		int index = getClosestX(p,temp);
+		
+		ArrayList<Point> temp2 = new ArrayList<Point>();
+		temp2.add(new Point(temp.get(index)));
+		temp.remove(index);
+		
+		index = getClosestX(p,temp);
+		temp2.add(new Point(temp.get(index)));
+		
+		
+		boolean remove = true;
+//		for (int i = 0; i < temp2.size(); i++) {
+//		for (int i = 0; i < nodes.size(); i++) {
+//			if(midPoint(temp.get(0),temp.get(1)).equals((nodes).get(i))){
+//				remove = false;
+//			}
+//		}
+		if(numberOfNodesInPath() == 1){
+			for (int i = 0; i < nodes.size(); i++) {
+				if(nodes.get(i).equals(midPoint(temp2.get(0),temp2.get(1)))){
+//					if(checkResistorInPath(temp2,1))
+//					remove = false;
+//					if(i ==2){
+						remove = false;
+//						}
+				}
+			}
+		}
+		if(remove){
+			removeThisPoint(tempCornerPoints,temp2.get(0));
+			removeThisPoint(tempCornerPoints,temp2.get(1));
+		}
+//		}
+		
+		visitFrom = 2;
+		return temp2;
+	}
+	
+	public ArrayList<Point> get90PointOnRight(ArrayList<Point> tempCornerPoints,Point p){
+		ArrayList<Point> temp = new ArrayList<Point>();
+		for (int i = 0; i < tempCornerPoints.size(); i++) {
+			if(appEqual(tempCornerPoints.get(i).getY(),p.getY(),1.2*thicknessOfLines) &&
+					tempCornerPoints.get(i).getX() > p.getX()+thicknessOfLines){
+				temp.add(new Point(tempCornerPoints.get(i)));
+//				if(temp.size() == 2){
+//					return temp;
+//				}
+			}
+		}
+		if(temp.size() < 2){
+			return null;
+		}
+		int index = getClosestX(p,temp);
+		
+		ArrayList<Point> temp2 = new ArrayList<Point>();
+		temp2.add(new Point(temp.get(index)));
+		temp.remove(index);
+		
+		index = getClosestX(p,temp);
+		temp2.add(new Point(temp.get(index)));
+		
+//		for (int i = 0; i < temp2.size(); i++) {
+//			removeThisPoint(tempCornerPoints,temp2.get(i));
+//		}
+		boolean remove = true;
+//		for (int i = 0; i < temp2.size(); i++) {
+//		for (int i = 0; i < nodes.size(); i++) {
+//			if(midPoint(temp.get(0),temp.get(1)).equals((nodes).get(i))){
+//				remove = false;
+//			}
+//		}
+//		if(numberOfNodesInPath() == 1){
+//			remove = false;
+//		}
+		
+		if(numberOfNodesInPath() == 1){
+			for (int i = 0; i < nodes.size(); i++) {
+				if(nodes.get(i).equals(midPoint(temp2.get(0),temp2.get(1)))){
+//					if(checkResistorInPath(temp2,1))
+//					if(i ==2){
+					remove = false;
+//					}
+				}
+			}
+		}
+		
+		if(remove){
+			removeThisPoint(tempCornerPoints,temp2.get(0));
+			removeThisPoint(tempCornerPoints,temp2.get(1));
+		}
+		
+		visitFrom = 4;
+		return temp2;
+	}
+	
+	
+	public ArrayList<Point> get90PointOnTop(ArrayList<Point> tempCornerPoints,Point p){
+		ArrayList<Point> temp = new ArrayList<Point>();
+		for (int i = 0; i < tempCornerPoints.size(); i++) {
+			if(appEqual(tempCornerPoints.get(i).getX(),p.getX(),1.2*thicknessOfLines) &&
+					tempCornerPoints.get(i).getY() < p.getY()-thicknessOfLines){
+				temp.add(new Point(tempCornerPoints.get(i)));
+//				if(temp.size() == 2){
+//					return temp;
+//				}
+			}
+		}
+		if(temp.size() < 2){
+			return null;
+		}
+		int index = getClosestY(p,temp);
+		
+		ArrayList<Point> temp2 = new ArrayList<Point>();
+		temp2.add(new Point(temp.get(index)));
+		temp.remove(index);
+		
+		index = getClosestY(p,temp);
+		temp2.add(new Point(temp.get(index)));
+		
+//		for (int i = 0; i < temp2.size(); i++) {
+//			removeThisPoint(tempCornerPoints,temp2.get(i));
+//		}
+		boolean remove = true;
+//		for (int i = 0; i < temp2.size(); i++) {
+//		for (int i = 0; i < nodes.size(); i++) {
+//			if(midPoint(temp.get(0),temp.get(1)).equals((nodes).get(i))){
+//		if(checkResistorInPath(temp2,1))
+//				remove = false;
+//			}
+//		}
+//		
+//		if(numberOfNodesInPath() == 1){
+//			remove = false;
+//		}
+		
+		if(numberOfNodesInPath() == 1){
+			for (int i = 0; i < nodes.size(); i++) {
+				if(nodes.get(i).equals(midPoint(temp2.get(0),temp2.get(1)))){
+//					remove = false;
+//					if(i ==2){
+						remove = false;
+//					}
+				}
+			}
+		}
+		
+		if(remove){
+			removeThisPoint(tempCornerPoints,temp2.get(0));
+			removeThisPoint(tempCornerPoints,temp2.get(1));
+		}
+		
+		visitFrom = 3;
+		return temp2;
+	}
+	
+	
+	public ArrayList<Point> get90PointOnBottom(ArrayList<Point> tempCornerPoints,Point p){
+//		ArrayList<Point> temp3 = new ArrayList<Point>();
+//		for (int i = 0; i < nodes.size(); i++) {
+//			if(appEqual(nodes.get(i).getX(),p.getX(),1.2*thicknessOfLines) &&
+//					nodes.get(i).getY() > p.getY()+thicknessOfLines){
+//				temp3.add(new Point(nodes.get(i)));
+//			}
+//		}
+//		if(temp3.size()>1){
+//			temp3.add(new Point(temp3.get(0).getX(),
+//					temp3.get(0).getY()-0.5*thicknessOfLines));
+//			temp3.add(new Point(temp3.get(0).getX(),
+//					temp3.get(0).getY()+0.5*thicknessOfLines));
+//			temp3.remove(0);
+//			tempCornerPoints.addAll(temp3);
+//		}
+		ArrayList<Point> temp = new ArrayList<Point>();
+		for (int i = 0; i < tempCornerPoints.size(); i++) {
+			if(appEqual(tempCornerPoints.get(i).getX(),p.getX(),1.2*thicknessOfLines) &&
+					tempCornerPoints.get(i).getY() > p.getY()+thicknessOfLines){
+				temp.add(new Point(tempCornerPoints.get(i)));
+			}
+		}
+		if(temp.size() < 2){
+			return null;
+		}
+		int index = getClosestY(p,temp);
+		
+		ArrayList<Point> temp2 = new ArrayList<Point>();
+		temp2.add(new Point(temp.get(index)));
+		temp.remove(index);
+		
+		index = getClosestY(p,temp);
+		temp2.add(new Point(temp.get(index)));
+		temp.remove(index);
+	
+		boolean remove = true;
+
+//		if(numberOfNodesInPath() == 1){
+//			for (int i = 0; i < nodes.size(); i++) {
+//				if(nodes.get(i).equals(midPoint(temp2.get(0),temp2.get(1)))){
+////					if(checkResistorInPath(temp2,1))
+////					remove = false;
+//					if(i ==2){
+						remove = false;
+//						}
+//				}
+//			}
+//		}
+		
+		if(remove){
+			removeThisPoint(tempCornerPoints,temp2.get(0));
+			removeThisPoint(tempCornerPoints,temp2.get(1));
+		}
+		
+		visitFrom = 1;
+		return temp2;
+	}
+	
+
+	//generalize this method
+	public void adjustNodesInCurrentPath(){
+//		Point p1 = null;
+//		Point p2 = null;
+		ArrayList<Point> temp = new ArrayList<Point>();
+		for (int i = 0; i < nodes.size(); i++) {
+			for (int j = 0; j < currentPath.size(); j++) {
+				if(nodes.get(i).equals(currentPath.get(j))){
+//					if(p1 == null){
+//						p1 = currentPath.get(j); 
+//					}
+//					else{
+//						p2 = currentPath.get(j);
+//						p1 = null;
+//					}
+					temp.add(currentPath.get(j));
+				}
+			}
+		}
+//		p1 = getMinX(p1,p2);
+//		p2 = getMaxX(p1,p2);
+//		p1.setX(p1.getX()-0.5*thicknessOfLines);
+//		p2.setX(p2.getX()+0.5*thicknessOfLines);
+//		Point min = getMinX(temp.get(0),temp.get(1));
+//		Point max = getMaxX(temp.get(0),temp.get(1));
+//		min.setX(min.getX()-0.5*thicknessOfLines);
+//		max.setX(max.getX()+0.5*thicknessOfLines);
+		System.out.println(temp.size());
+		for (int i = 0; i < temp.size(); i++) {
+			if(i <temp.size()/2){
+				temp.get(i).setX(temp.get(i).getX()-0.5*thicknessOfLines);
+			}
+			else{
+				temp.get(i).setX(temp.get(i).getX()+0.5*thicknessOfLines);
+			}
+		}
+	}
+	
+	public Point midPoint(Point p1 , Point p2){
+		double midx = mean(p1.getX(), p2.getX());
+		double midy = mean(p1.getY(),p2.getY());
+		Point temp = new Point(midx,midy);
+		return temp;
+	}
+	
+//	public String drawPath(){
+//		
+//	}
 	
 	/**
 	 * 
@@ -2018,6 +2957,62 @@ public class SVGProcessor {
 		return false;
 	}
 	
+	public void detectComponents(){
+//		for (int i = 0; i < lines.size(); i++) {
+//			
+//		}
+		setComponentsBoundries();
+	}
+	
+	public void setComponentsBoundries(){
+		for (int i = 0; i < lines.size()-1; i++) {
+			int skip = 0;
+			for (int j = 0; j < horizontalLines.size(); j++) {
+				if((lines.get(i).collinear(horizontalLines.get(j))&&
+						!lines.get(i+1).collinear(horizontalLines.get(j))
+						&& numberInString(lines.get(i+1).slope())!= -1)
+						||
+						(!lines.get(i).collinear(horizontalLines.get(j))&&
+						lines.get(i+1).collinear(horizontalLines.get(j))
+						&& numberInString(lines.get(i).slope())!= -1)){
+					componentsBoundries.add(lines.get(i).pointOfIntersection(
+							lines.get(i+1)));
+					skip = 1;
+					break;
+				}
+			}
+			
+			for (int k = 0; k < verticalLines.size(); k++) {
+				if(skip == 1){
+					skip = 0;
+					break;
+				}
+				if((lines.get(i).collinear(verticalLines.get(k))&&
+						!lines.get(i+1).collinear(verticalLines.get(k))
+						&& !appEqual(numberInString(lines.get(i+1).slope()),0,0.2))
+						||
+						(!lines.get(i).collinear(verticalLines.get(k))&&
+						lines.get(i+1).collinear(verticalLines.get(k))
+						&& !appEqual(numberInString(lines.get(i).slope()),0,0.2))
+						){
+					componentsBoundries.add(lines.get(i).pointOfIntersection(
+							lines.get(i+1)));
+					break;
+				}
+			}
+		}
+	}
+	
+	public String drawComponentsBoundries(){
+		String s = "";
+		for (int i = 0; i < componentsBoundries.size(); i++) {
+			s +="<path d=\"m"+(Math.floor(componentsBoundries.get(i).getX())-5)+" "+(Math.floor(componentsBoundries.get(i).getY()))+
+					" l0 5 l10 0 l0 -10 l-10 0 l0 5z\" fill=\"orange\"/>";
+		}
+		System.out.println(componentsBoundries.size());
+		return s;
+	}
+	
 	public void constructNodePoints(){
 		for (int i = 0; i < horizontalLines.size()-1; i++) {
 //			if()
@@ -2050,6 +3045,7 @@ public class SVGProcessor {
 		}
 		return false;
 	}
+	
 	public static ArrayList<Double> copyArrayListDouble(ArrayList<Double> arr){
 		ArrayList<Double> temp = new ArrayList<Double>();
 		for (int i = 0; i < arr.size(); i++) {
@@ -2068,10 +3064,12 @@ public class SVGProcessor {
 	 */
 	
 	public void init(){
-		constructRelativePoints();
 		setOrigin();
 		setTranslateAndScale();
+		constructRelativePoints();
+		
 		constructActualPoints();
+//		System.out.println(actualPoints.size());
 		constructLines();
 		setAngles();
 		constructPoint90Deg();
@@ -2088,10 +3086,14 @@ public class SVGProcessor {
 		constructPowerSourcePoints();
 		constructPowerSource();
 		constructNodes();
-		constructActualVerticalLines();		
-		constructActualHorizontalLines();
+//		constructActualVerticalLines();		
+//		constructActualHorizontalLines();
 		
 		setPartitions();
+		
+		detectComponents();
+		
+		System.out.println(verticalLines);
 		
 //		System.out.println("thickness"+thicknessOfLines);
 //		System.out.println("power source points: "+powerSourcePoints);
@@ -2110,9 +3112,10 @@ public class SVGProcessor {
 //			ReadFile file = new ReadFile("C:/Users/omar/Desktop/bachelor/circuit1.svg");
 //			ReadFile file = new ReadFile("C:/Users/omar/Desktop/bachelor/resistorTest1.svg");
 //			ReadFile file = new ReadFile("C:/Users/omar/Desktop/bachelor/2000px-Resistor_symbol_America.svg");
-//			ReadFile file = new ReadFile("C:/Users/omar/Desktop/bachelor/220px-Series_circuit.svg");
+//			SVGProcessor file = new SVGProcessor("C:/Users/omar/Desktop/bachelor/220px-Series_circuit.svg");
 //			ReadFile file = new ReadFile("C:/Users/omar/Desktop/bachelor/reem.svg");
-			SVGProcessor file = new SVGProcessor("test1.svg");
+//			SVGProcessor file = new SVGProcessor("test1.svg");
+			SVGProcessor file = new SVGProcessor("C:/Users/omar/Desktop/bachelor/OMARRRRR_2.svg");
 			String[] aryLines = file.openFile();
 			String[] aryLines2 = file2.openFile();
 //			file2.constructRelativePoints();
@@ -2197,14 +3200,23 @@ public class SVGProcessor {
 			
 			
 			file.solve();
-			for (int i = 0; i < file.resistors.size(); i++) {
-//				int c = i+1;
-				System.out.println(file.resistors.get(i));
-//				double resistance = sc.nextDouble();
-//				file.resistors.get(i).setResistanceValue(resistance);
-			}
+			file.setPartitionsCurrent();
+			file.constructCurrentPath();
+			System.out.println("number of path points :"+file.currentPath.size());
+//			System.out.println("number in string: "+file.numberInString("g"));
+//			System.out.println(file.partitionsCurrent);
+//			System.out.println(file.yPartitions);
+//			System.out.println(file.resistors.get(1));
+//			System.out.println(file.lines);
+//			for (int i = 0; i < file.resistors.size(); i++) {
+////				int c = i+1;
+//				System.out.println(file.resistors.get(i));
+////				double resistance = sc.nextDouble();
+////				file.resistors.get(i).setResistanceValue(resistance);
+//			}
 			
 			file.draw();
+//			System.out.println(file.point90Deg.size());
 			
 		}
 		catch(IOException e){

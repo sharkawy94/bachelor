@@ -105,15 +105,82 @@ public class Line {
 		this.p2 = p2;
 	}
 	
+	public boolean collinear(Line l2){
+		//get y=mx+c of this then substitute with l2
+		double m1 = numberInString(this.slope());
+		double m2 = numberInString(l2.slope());
+		if(m1 == -1 && m2 == -1){
+//			return appEqual(l2.p2.getX(),this.p2.getX(),1.5) && appEqual(l2.p1.getX(),
+//					this.p1.getX(),1.5);
+			return Math.abs(this.getP1().getX()-l2.getP1().getX()) <= 2.1;
+		}
+		double c1 = this.p2.getY()+(-1)*m1*this.p2.getX();
+		double c2 = l2.p2.getY()+(-1)*m2*l2.p2.getX();
+		return appEqual(c1,c2,6) && appEqual(m1,m2,0.2);
+	}
+	public static boolean appEqual(double x , double y , double range){
+		double xUp = x+range;
+		double xDown = x-range;
+		if(y >= xDown && y <= xUp){
+			return true;
+		}
+		return false;
+	}
+	
+	public static double numberInString(String s){
+		String temp = "";
+		boolean contain = false;
+		for (int i = 0; i < s.length(); i++) {
+			if((s.charAt(i) >= '0' && s.charAt(i) <= '9')||(s.charAt(i) == '-')
+					||(s.charAt(i) == '.')){
+				temp += s.charAt(i);
+				contain = true;
+			}
+//			else{
+//				break;
+//			}
+		}
+		if(temp.length() == 0 || !contain){
+			return -1;
+		}
+		double number;
+		
+		try{
+			number = Double.parseDouble(temp);
+		}
+		catch(Exception e){
+			number = 0;
+		}
+		
+		return number;
+	}
+	
+	public String slope(){
+		double diffX = Math.abs(p2.getX()- p1.getX());
+		double diffY = Math.abs(p2.getY() - p1.getY());
+		if(diffY <= 2.1){
+			return "0";
+		}
+		if(diffX <= 2){
+			return "undefined";
+		}
+		return (diffY/diffX)+"";
+	}
+	
 	public String toString(){
 		return "("+p1.toString()+" "+p2.toString()+")";
 	}
 	
 	public static void main(String[] args) {
+		Point x = new Point(2,1);
+		Point y = new Point(1,5);
+		Line l = new Line(x,y);
+		System.out.println(numberInString(l.slope()));
 //		Point p1 = new Point(6756,5038);
-		
-		
-		
+//		Line l1 = new Line(new Point(1,1),new Point(1,2));
+//		Line l2 = new Line(new Point(1,1.1),new Point(1,1.5));
+//		System.out.println("collinear: "+l1.collinear(l2));
 	}
 	
 }
+
