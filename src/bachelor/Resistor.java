@@ -6,7 +6,7 @@ package bachelor;
  *
  */
 
-public class Resistor {
+public class Resistor extends Component{
 	double voltageValue;
 	double currentValue;
 	double resistanceValue;
@@ -14,12 +14,14 @@ public class Resistor {
 	Point endPoint;
 	
 	public Resistor(Point s , Point e , double r){
+		super(s,s,s,s);
 		resistanceValue = r;
 		startPoint = new Point(s);
 		endPoint = new Point(e);
 	}
 	
 	public Resistor(Point s , Point e){
+		super(s,s,s,s);
 		startPoint = new Point(s);
 		endPoint = new Point(e);
 	}

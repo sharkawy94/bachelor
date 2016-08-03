@@ -51,6 +51,9 @@ public class SVGProcessor {
 	private ArrayList<Line> pendingCurrentPath;
 	private ArrayList<Line> currentPathCorners;
 	private ArrayList<Point> componentsBoundries;
+	private ArrayList<Component> components;
+	private ArrayList<SVGProcessor> resistorsDatabase;
+	private ArrayList<String> resistorsPaths;
 	private int nodesPassed = 0;
 	private int visitFrom;
 	private double horizontalSlope;
@@ -102,6 +105,9 @@ public class SVGProcessor {
 		pendingCurrentPath = new ArrayList<Line>();
 		currentPathCorners = new ArrayList<Line>();
 		componentsBoundries  = new ArrayList<Point>();
+		components = new ArrayList<Component>();
+		resistorsDatabase = new ArrayList<SVGProcessor>();
+		resistorsPaths = new ArrayList<String>();
 	}
 	
 	/**
@@ -825,9 +831,9 @@ public class SVGProcessor {
 //		constructPoint90Deg();
 //		constructCornerPoints();
 //		constructHorizontalLines();
-//		s += drawHorizontalLines();
+		s += drawHorizontalLines();
 //		constructVerticalLines();
-//		s+= drawVerticalLines();
+		s+= drawVerticalLines();
 //		constructResistorPoints();
 //		s += drawResistorPoints();
 //		
@@ -837,7 +843,8 @@ public class SVGProcessor {
 //		s += drawCornerPoints();
 //		s += drawNodes();
 		s += drawValues();
-		s += drawComponentsBoundries();
+//		s += drawComponentsBoundries();
+		s += drawComponents(); 
 //		s += drawLines();
 //		s += drawActualVerticalLines();
 //		s += drawActualHorizontalLines();
@@ -1043,7 +1050,7 @@ public class SVGProcessor {
 			for (int i = 0; i < sorted.size()-1; i++) {
 				Point firstCorner = new Point(getMinX(sorted.get(i),sorted.get(i+1)));
 				Point secondCorner = new Point(getMaxX(sorted.get(i),sorted.get(i+1)));
-				if(new Line(firstCorner,secondCorner).length() >= 150)
+				if(new Line(firstCorner,secondCorner).length() >= 160)
 				horizontalLines.add(new Line(firstCorner,secondCorner));
 				i++;
 			}
@@ -1074,8 +1081,9 @@ public class SVGProcessor {
 			for (int i = 0; i < sorted.size()-1; i++) {
 				Point firstCorner = new Point(getMinY(sorted.get(i),sorted.get(i+1)));
 				Point secondCorner = new Point(getMaxY(sorted.get(i),sorted.get(i+1)));
-				if(new Line(firstCorner,secondCorner).length() >= 150)
+				if(new Line(firstCorner,secondCorner).length() >= 160)
 				verticalLines.add(new Line(firstCorner,secondCorner));
+//				System.out.println(new Line(firstCorner,secondCorner).length());
 				i++;
 			}
 		}
@@ -2957,11 +2965,157 @@ public class SVGProcessor {
 		return false;
 	}
 	
-	public void detectComponents(){
+	public void detectComponents() throws IOException{
 //		for (int i = 0; i < lines.size(); i++) {
 //			
 //		}
 		setComponentsBoundries();
+		constructComponents();
+
+		defineComponents();
+	}
+	
+	public void defineComponents() throws IOException{
+//		for (int i = 0; i < components.size(); i++) {
+//			if(matchResistors(components.get(i))){
+//				
+//			}
+//		}
+//		System.out.println(getAnglesInComponent(components.get(0)));
+		System.out.println(matchResistors(components.get(0)));
+	}
+	
+	public boolean matchResistors(Component c) throws IOException{
+		ArrayList<Double> anglesInComponent = getAnglesInComponent(c);
+		for (int i = 0; i < resistorsDatabase.size(); i++) {
+			SVGProcessor resistor = resistorsDatabase.get(i);
+			resistor.openFile();
+			resistor.setOrigin();
+			resistor.setTranslateAndScale();
+			resistor.constructRelativePoints();
+			resistor.constructActualPoints();
+			resistor.constructLines();
+			resistor.setAngles();
+			ArrayList<Double> resistorAngles = resistor.angles;
+			System.out.println(matchAngles(anglesInComponent,resistorAngles));
+			if(matchAngles(anglesInComponent,resistorAngles) > 0.5){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public double matchAngles(ArrayList<Double> angles1, ArrayList<Double> angles2){
+		double success = 0;
+		ArrayList<Double> ang1 = new ArrayList<Double>();
+		ArrayList<Double> ang2 = new ArrayList<Double>();
+		if(Math.abs(angles1.size()-angles2.size())> 15){
+			return 0;
+		}
+		for (int i = 0; i < angles1.size(); i++) {
+			ang1.add(new Double(angles1.get(i)));
+		}
+		for (int i = 0; i < angles2.size(); i++) {
+			ang2.add(new Double(angles2.get(i)));
+		}
+		for (int i = 0; i < ang1.size(); i++) {
+			for (int j = 0; j < ang2.size(); j++) {
+				if(appEqual(ang1.get(i),ang2.get(j),1)){
+					success++;
+					ang2.remove(j);
+					break;
+				}
+			}
+		}
+		double successRate = success/ang1.size();
+		return successRate;
+	}
+	
+	public void constructComponents(){
+		ArrayList<Point> sortedX = sortPointsX(componentsBoundries);
+		ArrayList<Point> closestPoints = new ArrayList<Point>();
+		while(!sortedX.isEmpty()){			
+			for (int j = 1; j < sortedX.size(); j++) {
+				if(closestPoints.size() < 3){
+					closestPoints.add(sortedX.get(j));
+				}
+				else{
+					for (int i = closestPoints.size()-1; i >= 0; i--) {
+						if(new Line(sortedX.get(0),sortedX.get(j)).length() < 
+								new Line(sortedX.get(0), closestPoints.get(i)).length()){
+							closestPoints.set(i,sortedX.get(j));
+							break;
+						}
+					}
+				}
+			}
+			components.add(new Component(sortedX.get(0),closestPoints.get(0),
+					closestPoints.get(1),closestPoints.get(2)));
+			
+			sortedX.remove(0);
+			sortedX.removeAll(closestPoints);
+			closestPoints.clear();
+		}	
+	}
+	
+	public ArrayList<Double> getAnglesInComponent(Component c){
+		ArrayList<Double> angles = new ArrayList<Double>();
+		ArrayList<Point> boundries = new ArrayList<Point>();
+		boundries.add(c.getBoundry1());
+		boundries.add(c.getBoundry2());
+		boundries.add(c.getBoundry3());
+		boundries.add(c.getBoundry4());
+		if(getComponentOrientation(c) == 1){
+			boundries = sortPointsY(boundries);
+			for (int i = 0; i < lines.size()-1; i++) {
+				Point p = lines.get(i).pointOfIntersection(lines.get(i+1));
+				if(p.getY() >= boundries.get(0).getY() && p.getY() 
+						<= boundries.get(3).getY() 
+						&& p.getX() >= boundries.get(0).getX() - 6*thicknessOfLines
+						&& p.getX() <= boundries.get(0).getX() + 6*thicknessOfLines){
+					angles.add(lines.get(i).Angle(lines.get(i+1)));
+				}
+			}
+		}
+		else{
+			boundries = sortPointsX(boundries);
+			for (int i = 0; i < lines.size()-1; i++) {
+				Point p = lines.get(i).pointOfIntersection(lines.get(i+1));
+				if(p.getX() >= boundries.get(0).getX() && p.getX() 
+						<= boundries.get(3).getX() 
+						&& p.getY() >= boundries.get(0).getY() - 6*thicknessOfLines
+						&& p.getY() <= boundries.get(0).getY() + 6*thicknessOfLines){
+					angles.add(lines.get(i).Angle(lines.get(i+1)));
+				}
+			}
+		}
+		return angles;
+	}
+	
+	public int getComponentOrientation(Component c){
+		ArrayList<Point> elements = new ArrayList<Point>();
+		elements.add(c.getBoundry1());
+		elements.add(c.getBoundry2());
+		elements.add(c.getBoundry3());
+		elements.add(c.getBoundry4());
+//		elements = sortPointsX(elements);
+//		if(Math.abs(elements.get(0).getX() - elements.get(1).getX())
+//				< Math.abs(elements.get(0).getY() - elements.get(1).getY())){
+//			return 1;
+//		}
+		Point closest = new Point();
+		double distance = 1000;
+		for (int i = 1; i < elements.size(); i++) {
+			if(new Line (elements.get(0),elements.get(i)).length() < distance){
+				closest = elements.get(i);
+				distance = new Line (elements.get(0),elements.get(i)).length();
+			}
+		}
+		if(Math.abs(elements.get(0).getX() - closest.getX())
+				< Math.abs(elements.get(0).getY() - closest.getY())){
+			return 0;
+		}
+		return 1;
 	}
 	
 	public void setComponentsBoundries(){
@@ -3009,7 +3163,22 @@ public class SVGProcessor {
 			s +="<path d=\"m"+(Math.floor(componentsBoundries.get(i).getX())-5)+" "+(Math.floor(componentsBoundries.get(i).getY()))+
 					" l0 5 l10 0 l0 -10 l-10 0 l0 5z\" fill=\"orange\"/>";
 		}
-		System.out.println(componentsBoundries.size());
+		return s;
+	}
+	
+	public String drawComponents(){
+		String s = "";
+		for (int i = 0; i < components.size(); i++) {
+			s +="<path d=\"m"+(Math.floor(components.get(i).getBoundry1().getX())-5)+" "+(Math.floor(components.get(i).getBoundry1().getY()))+
+					" l0 5 l10 0 l0 -10 l-10 0 l0 5z\" fill=\"orange\"/>";
+			s +="<path d=\"m"+(Math.floor(components.get(i).getBoundry2().getX())-5)+" "+(Math.floor(components.get(i).getBoundry2().getY()))+
+					" l0 5 l10 0 l0 -10 l-10 0 l0 5z\" fill=\"orange\"/>";
+			s +="<path d=\"m"+(Math.floor(components.get(i).getBoundry3().getX())-5)+" "+(Math.floor(components.get(i).getBoundry3().getY()))+
+					" l0 5 l10 0 l0 -10 l-10 0 l0 5z\" fill=\"orange\"/>";
+			s +="<path d=\"m"+(Math.floor(components.get(i).getBoundry4().getX())-5)+" "+(Math.floor(components.get(i).getBoundry4().getY()))+
+					" l0 5 l10 0 l0 -10 l-10 0 l0 5z\" fill=\"orange\"/>";
+		}
+//		System.out.println(componentsBoundries.size());
 		return s;
 	}
 	
@@ -3059,11 +3228,26 @@ public class SVGProcessor {
 //		
 //	}
 	
+	public void constructResistorsDatabase() throws IOException{
+		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\resistor6.svg");
+
+		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\resistor1.svg");
+		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\resistor2.svg");
+		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\resistor3.svg");
+		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\resistor4.svg");
+		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\resistor5.svg");
+		for (int i = 0; i < resistorsPaths.size(); i++) {
+			resistorsDatabase.add(new SVGProcessor(resistorsPaths.get(i)));
+		}
+	}
+	
 	/**
 	 * calls the methods that makes the are needed to run the processor
+	 * @throws IOException 
 	 */
 	
-	public void init(){
+	public void init() throws IOException{
+		openFile();
 		setOrigin();
 		setTranslateAndScale();
 		constructRelativePoints();
@@ -3090,10 +3274,10 @@ public class SVGProcessor {
 //		constructActualHorizontalLines();
 		
 		setPartitions();
-		
+		constructResistorsDatabase();
+
 		detectComponents();
-		
-		System.out.println(verticalLines);
+//		System.out.println(verticalLines);
 		
 //		System.out.println("thickness"+thicknessOfLines);
 //		System.out.println("power source points: "+powerSourcePoints);
@@ -3116,8 +3300,8 @@ public class SVGProcessor {
 //			ReadFile file = new ReadFile("C:/Users/omar/Desktop/bachelor/reem.svg");
 //			SVGProcessor file = new SVGProcessor("test1.svg");
 			SVGProcessor file = new SVGProcessor("C:/Users/omar/Desktop/bachelor/OMARRRRR_2.svg");
-			String[] aryLines = file.openFile();
-			String[] aryLines2 = file2.openFile();
+//			String[] aryLines = file.openFile();
+//			String[] aryLines2 = file2.openFile();
 //			file2.constructRelativePoints();
 //			file2.setOrigin();
 //			file2.setTranslateAndScale();

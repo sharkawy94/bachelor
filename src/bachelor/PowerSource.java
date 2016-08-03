@@ -6,12 +6,13 @@ package bachelor;
  *
  */
 
-public class PowerSource {
+public class PowerSource extends Component{
 	Point startPoint;
 	Point endPoint;
 	double voltageValue;
 	
 	PowerSource(Point s , Point e){
+		super(s,s,s,s);
 		startPoint = new Point(s);
 		endPoint = new Point(e);
 	}
