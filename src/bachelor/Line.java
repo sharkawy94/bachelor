@@ -68,10 +68,11 @@ public class Line {
 	 */
 	
 	public double length(){
-		double length = Math.sqrt((this.getP2().getY() - this.getP1().getY())*
-				(this.getP2().getY() - this.getP1().getY()) + 
-				(this.getP2().getX() - this.getP1().getX())*
-				(this.getP2().getX() - this.getP1().getX()));
+		double length = Math.sqrt(
+				((this.getP2().getY() - this.getP1().getY())*
+				(this.getP2().getY() - this.getP1().getY())) + 
+				((this.getP2().getX() - this.getP1().getX())*
+				(this.getP2().getX() - this.getP1().getX())));
 		return length;
 	}
 

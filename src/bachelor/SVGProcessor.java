@@ -173,11 +173,11 @@ public class SVGProcessor {
 				if(containLastIndex(temp,tag) != -1){
 					if(tag.equals("path")){
 						startPathTag.add(i);
-						return;
+//						return;
 					}
 					if(tag.equals("<g")){
 						startGTag.add(i);
-						return;
+//						return;
 //						System.out.println(i);
 					}
 				}
@@ -192,11 +192,11 @@ public class SVGProcessor {
 	
 	public void getEndTag(ArrayList<Integer> tag){
 		for (int i = 0; i < tag.size(); i++) {
-			for (int j = 0; j < file.length; j++) {
+			for (int j = 0; j < file.length-tag.get(i); j++) {
 				if(containFromLast(file[j+tag.get(i)],'>')){
 					endPathTag.add(j+tag.get(i));
 //					System.out.println(endPathTag.toString());
-					return;
+//					return;
 				}
 			}
 		}
@@ -445,9 +445,9 @@ public class SVGProcessor {
 	 * adds the points from the SVG file to the relativePoints attribute
 	 */
 	
-	public void constructRelativePoints(){
-		getStartTag("path");
-		getEndTag(startPathTag);
+	public void constructRelativePoints(int tagIndex){
+//		getStartTag("path");
+//		getEndTag(startPathTag);
 		int startLine = startLineIndex();
 		StringTokenizer st;
 		int n = 2;
@@ -455,7 +455,7 @@ public class SVGProcessor {
 		String s;
 		double x = 0;
 		
-		for(int i = startPathTag.get(0); i <= endPathTag.get(0); i++){
+		for(int i = startPathTag.get(tagIndex); i <= endPathTag.get(tagIndex); i++){
 			if(startLine >0){
 				st = new StringTokenizer(file[i].substring(startLine, file[startPathTag.get(0)].length()));
 			}
@@ -517,8 +517,13 @@ public class SVGProcessor {
 				}
 			}
 		}
+		
 //		constructActualPoints();
 //		System.out.println();
+		if(startPathTag.size() > tagIndex+1){
+			constructRelativePoints(tagIndex+1);
+		}
+//		System.out.println(startPathTag);
 	}
 	
 	/**
@@ -831,9 +836,9 @@ public class SVGProcessor {
 //		constructPoint90Deg();
 //		constructCornerPoints();
 //		constructHorizontalLines();
-		s += drawHorizontalLines();
+//		s += drawHorizontalLines();
 //		constructVerticalLines();
-		s+= drawVerticalLines();
+//		s+= drawVerticalLines();
 //		constructResistorPoints();
 //		s += drawResistorPoints();
 //		
@@ -2129,34 +2134,32 @@ public class SVGProcessor {
 		
 		if(powerSourceOrientation == 0){
 			nextVisit.add(Direction.Left);
-			ArrayList<Point> temp = get90PointOnLeft(tempCornerPoints,powerSource.startPoint);
+			ArrayList<Point> temp = get90PointOnLeft(tempCornerPoints,
+					powerSource.startPoint);
 			currentPoint = new Point(midPoint(temp.get(0),temp.get(1)));
 			
 			currentPath.add(new Point(currentPoint));
 			currentPathCorners.add(new Line(temp.get(0),temp.get(1)));
-//			currentPath.add(new Point(temp.get(0)));
-//			currentPath.add(new Point(temp.get(1)));
 
-//		while(!appEqual(currentPath.get(currentPath.size()-1).getX(),powerSource.endPoint.getX(),1.5*thicknessOfLines)){
+		while(!appEqual(currentPath.get(currentPath.size()-1).getX(),powerSource.endPoint.getX(),1.5*thicknessOfLines)){
+			setNextVisit();
+			configurePath(tempCornerPoints);
+		}
 //			setNextVisit();
 //			configurePath(tempCornerPoints);
-//		}
-			setNextVisit();
-			configurePath(tempCornerPoints);
-			setNextVisit();
-			configurePath(tempCornerPoints);
-			setNextVisit();
-			configurePath(tempCornerPoints);
-			setNextVisit();
-			configurePath(tempCornerPoints);
-			setNextVisit();
-			configurePath(tempCornerPoints);
-			setNextVisit();
-			configurePath(tempCornerPoints);
-			setNextVisit();
-			configurePath(tempCornerPoints);
-			setNextVisit();
-			
+//			setNextVisit();
+//			configurePath(tempCornerPoints);
+//			setNextVisit();
+//			configurePath(tempCornerPoints);
+//			setNextVisit();
+//			configurePath(tempCornerPoints);
+//			setNextVisit();
+//			configurePath(tempCornerPoints);
+//			setNextVisit();
+//			configurePath(tempCornerPoints);
+//			setNextVisit();
+//			configurePath(tempCornerPoints);
+//			
 		adjustNodesInCurrentPath();
 //		nodes.clear();
 //		nodes.add(currentPath.get(currentPath.size()-2));
@@ -2487,8 +2490,10 @@ public class SVGProcessor {
 //			if(i != currentPath.size()-1){
 //				s += " ";
 //			}
-			if(temp2.get(i+1).getY()<yPartitions.get(2).getY() &&
-					temp2.get(i+1).getY()>yPartitions.get(2).getX() )
+			if((temp2.get(i+1).getY()<yPartitions.get(yPartitions.size()-1).getY() &&
+					temp2.get(i+1).getY()>yPartitions.get(yPartitions.size()-1).getX()) ||
+					(temp2.get(i).getY()<yPartitions.get(yPartitions.size()-1).getY() &&
+							temp2.get(i).getY()>yPartitions.get(yPartitions.size()-1).getX()) )
 			s += "\" stroke=\"pink\" stroke-width=\"8\" stroke-linecap=\"round\" fill=\"none\" stroke-linejoin=\"round\"/>";
 			else
 				s += "\" stroke=\"pink\" stroke-width=\"4\" stroke-linecap=\"round\" fill=\"none\" stroke-linejoin=\"round\"/>";
@@ -2596,8 +2601,7 @@ public class SVGProcessor {
 			nextVisit.add(Direction.Right);
 			return;
 		}
-		if(visitFrom == 2){
-			
+		if(visitFrom == 2){	
 			nextVisit.add(Direction.Left);
 			nextVisit.add(Direction.Down);
 			nextVisit.add(Direction.Up);
@@ -2681,16 +2685,41 @@ public class SVGProcessor {
 //				remove = false;
 //			}
 //		}
-		if(numberOfNodesInPath() == 1){
-			for (int i = 0; i < nodes.size(); i++) {
-				if(nodes.get(i).equals(midPoint(temp2.get(0),temp2.get(1)))){
-//					if(checkResistorInPath(temp2,1))
-//					remove = false;
-//					if(i ==2){
-						remove = false;
-//						}
-				}
+//		boolean remove2 = false;
+//		for (int i = 0; i < nodes.size(); i++) {
+//			if(nodes.get(i).equals(p)){
+//					remove2 = true;
+//			}
+//		}
+		
+//		if(numberOfNodesInPath() == 1){
+//			for (int i = 0; i < nodes.size(); i++) {
+//				if(nodes.get(i).equals(midPoint(temp2.get(0),temp2.get(1)))){
+////					if(checkResistorInPath(temp2,1))
+////					remove = false;
+////					if(i ==2){
+//						remove = false;
+////						}
+//				}
+//			}
+//		}
+		
+		int twoNodesConnected = 0;
+		for (int i = 0; i < nodes.size(); i++) {
+			if(nodes.get(i).equals(midPoint(temp2.get(0),temp2.get(1)))){
+				twoNodesConnected++;
+				break;
 			}
+		}
+		for (int i = 0; i < nodes.size(); i++) {
+			if(nodes.get(i).equals(p)){
+				twoNodesConnected++;
+				break;
+			}
+		}
+		remove = true;
+		if(twoNodesConnected == 2){
+			remove = false;
 		}
 		if(remove){
 			removeThisPoint(tempCornerPoints,temp2.get(0));
@@ -2739,15 +2768,41 @@ public class SVGProcessor {
 //			remove = false;
 //		}
 		
-		if(numberOfNodesInPath() == 1){
-			for (int i = 0; i < nodes.size(); i++) {
-				if(nodes.get(i).equals(midPoint(temp2.get(0),temp2.get(1)))){
-//					if(checkResistorInPath(temp2,1))
-//					if(i ==2){
-					remove = false;
-//					}
-				}
+//		boolean remove2 = false;
+//		for (int i = 0; i < nodes.size(); i++) {
+//			if(nodes.get(i).equals(p)){
+//					remove2 = true;
+//			}
+//		}&& remove2
+		
+//		if(numberOfNodesInPath() == 1 ){
+//			for (int i = 0; i < nodes.size(); i++) {
+//				if(nodes.get(i).equals(midPoint(temp2.get(0),temp2.get(1)))){
+////					if(checkResistorInPath(temp2,1))
+////					remove = false;
+////					if(i ==2){
+//						remove = false;
+////						}
+//				}
+//			}
+//		}
+		
+		int twoNodesConnected = 0;
+		for (int i = 0; i < nodes.size(); i++) {
+			if(nodes.get(i).equals(midPoint(temp2.get(0),temp2.get(1)))){
+				twoNodesConnected++;
+				break;
 			}
+		}
+		for (int i = 0; i < nodes.size(); i++) {
+			if(nodes.get(i).equals(p)){
+				twoNodesConnected++;
+				break;
+			}
+		}
+		remove = true;
+		if(twoNodesConnected == 2){
+			remove = false;
 		}
 		
 		if(remove){
@@ -2798,16 +2853,41 @@ public class SVGProcessor {
 //		if(numberOfNodesInPath() == 1){
 //			remove = false;
 //		}
+//		boolean remove2 = false;
+//		for (int i = 0; i < nodes.size(); i++) {
+//			if(nodes.get(i).equals(p)){
+//					remove2 = true;
+//			}
+//		} && remove2
 		
-		if(numberOfNodesInPath() == 1){
-			for (int i = 0; i < nodes.size(); i++) {
-				if(nodes.get(i).equals(midPoint(temp2.get(0),temp2.get(1)))){
-//					remove = false;
-//					if(i ==2){
-						remove = false;
-//					}
-				}
+//		if(numberOfNodesInPath() == 1){
+//			for (int i = 0; i < nodes.size(); i++) {
+//				if(nodes.get(i).equals(midPoint(temp2.get(0),temp2.get(1)))){
+////					if(checkResistorInPath(temp2,1))
+////					remove = false;
+////					if(i ==2){
+//						remove = false;
+////						}
+//				}
+//			}
+//		}
+		
+		int twoNodesConnected = 0;
+		for (int i = 0; i < nodes.size(); i++) {
+			if(nodes.get(i).equals(midPoint(temp2.get(0),temp2.get(1)))){
+				twoNodesConnected++;
+				break;
 			}
+		}
+		for (int i = 0; i < nodes.size(); i++) {
+			if(nodes.get(i).equals(p)){
+				twoNodesConnected++;
+				break;
+			}
+		}
+		remove = true;
+		if(twoNodesConnected == 2){
+			remove = false;
 		}
 		
 		if(remove){
@@ -2857,18 +2937,43 @@ public class SVGProcessor {
 		temp.remove(index);
 	
 		boolean remove = true;
-
+		
+//		boolean remove2 = false;
+//		for (int i = 0; i < nodes.size(); i++) {
+//			if(nodes.get(i).equals(p)){
+//					remove2 = true;
+//			}
+//		} && remove2
+		
 //		if(numberOfNodesInPath() == 1){
 //			for (int i = 0; i < nodes.size(); i++) {
 //				if(nodes.get(i).equals(midPoint(temp2.get(0),temp2.get(1)))){
 ////					if(checkResistorInPath(temp2,1))
 ////					remove = false;
-//					if(i ==2){
-						remove = false;
-//						}
+////					if(i ==2){
+//						remove = false;
+////						}
 //				}
 //			}
 //		}
+		
+		int twoNodesConnected = 0;
+		for (int i = 0; i < nodes.size(); i++) {
+			if(nodes.get(i).equals(midPoint(temp2.get(0),temp2.get(1)))){
+				twoNodesConnected++;
+				break;
+			}
+		}
+		for (int i = 0; i < nodes.size(); i++) {
+			if(nodes.get(i).equals(p)){
+				twoNodesConnected++;
+				break;
+			}
+		}
+		remove = true;
+		if(twoNodesConnected == 2){
+			remove = false;
+		}
 		
 		if(remove){
 			removeThisPoint(tempCornerPoints,temp2.get(0));
@@ -2992,16 +3097,21 @@ public class SVGProcessor {
 			resistor.openFile();
 			resistor.setOrigin();
 			resistor.setTranslateAndScale();
-			resistor.constructRelativePoints();
+			resistor.constructRelativePoints(0);
 			resistor.constructActualPoints();
 			resistor.constructLines();
 			resistor.setAngles();
+//			if(i == 0){
+//				System.out.println("resistor "+ i +" angles: "+resistor.angles);
+//				System.out.println("resistor size: "+resistor.angles.size());
+//			}
 			ArrayList<Double> resistorAngles = resistor.angles;
-			System.out.println(matchAngles(anglesInComponent,resistorAngles));
+//			System.out.println(matchAngles(anglesInComponent,resistorAngles));
 			if(matchAngles(anglesInComponent,resistorAngles) > 0.5){
 				return true;
 			}
 		}
+
 		return false;
 	}
 	
@@ -3009,6 +3119,8 @@ public class SVGProcessor {
 		double success = 0;
 		ArrayList<Double> ang1 = new ArrayList<Double>();
 		ArrayList<Double> ang2 = new ArrayList<Double>();
+//		System.out.println(angles1.size());
+//		System.out.println(angles2.size());
 		if(Math.abs(angles1.size()-angles2.size())> 15){
 			return 0;
 		}
@@ -3020,7 +3132,7 @@ public class SVGProcessor {
 		}
 		for (int i = 0; i < ang1.size(); i++) {
 			for (int j = 0; j < ang2.size(); j++) {
-				if(appEqual(ang1.get(i),ang2.get(j),1)){
+				if(appEqual(ang1.get(i),ang2.get(j),2)){
 					success++;
 					ang2.remove(j);
 					break;
@@ -3049,13 +3161,87 @@ public class SVGProcessor {
 					}
 				}
 			}
+			
+//			for (int i = closestPoints.size()-1; i > 0; i++) {
+//				if(new Line(sortedX.get(0),closestPoints.get(i)).length()
+//					< new Line(sortedX.get(0),closestPoints.get(i-1)).length()){
+//					Point temp = new Point(closestPoints.get(i));
+//					closestPoints.set(i, closestPoints.get(i-1));
+//					closestPoints.set(i-1, temp);
+//				}
+//					
+//			}
 			components.add(new Component(sortedX.get(0),closestPoints.get(0),
 					closestPoints.get(1),closestPoints.get(2)));
+//			set the start and end Point for each component
 			
 			sortedX.remove(0);
 			sortedX.removeAll(closestPoints);
 			closestPoints.clear();
 		}	
+		for (int i = 0; i < components.size(); i++) {
+			ArrayList<Point> temp = new ArrayList<Point>();
+			temp.add(components.get(0).getBoundry1());
+			temp.add(components.get(0).getBoundry2());
+			temp.add(components.get(0).getBoundry3());
+			temp.add(components.get(0).getBoundry4());
+			int closestIndex = 0;
+			double length = 1000;
+			for (int j = 1; j < temp.size(); j++) {
+				if(new Line(temp.get(0),temp.get(j)).length()<length){
+					closestIndex = j;
+					length = new Line(temp.get(0),temp.get(j)).length();
+				}
+			}
+			Point tempP = new Point(temp.get(closestIndex));
+			temp.remove(closestIndex);
+			components.add(new Component(temp.get(0),tempP,
+					temp.get(1),temp.get(2)));
+			components.remove(0);
+		}
+
+//		for (int k = 0; k < sortedX.size(); k++) {
+//			
+//			
+//			ArrayList<Point> sortedLength = new ArrayList<Point>(80);
+//			for (int j = k+1; j < sortedX.size(); j++) {
+//				for (int i = sortedLength.size()-1; i >= 0; i--) {
+//					if(new Line(sortedX.get(k),sortedX.get(j)).length()
+//							< new Line(sortedX.get(k),sortedLength.get(i)).length()){
+//						if(sortedLength.size() == 1){
+//							sortedLength.add(sortedLength.get(0));
+//							sortedLength.set(0, new Point(sortedX.get(j)));
+//							break;
+//						}
+//						if(sortedLength.size()-1 == i){
+//							sortedLength.add(sortedLength.get(i));
+//							i--;
+//						}
+//						else{
+//							sortedLength.set(i+1, sortedLength.get(i));
+//						}
+//					}
+//					else{
+//						if(sortedLength.size() == 1){
+//							sortedLength.add(new Point(sortedX.get(j)));
+//							break;
+//						}
+//						if(sortedLength.size()-1 == i){
+//							sortedLength.add(sortedX.get(j));
+//							break;
+//						}
+//						sortedLength.set(i+1, sortedX.get(j));
+//					}
+//				}
+//				if(sortedLength.isEmpty()){
+//					sortedLength.add(new Point(sortedX.get(j)));
+//				}
+//			}
+//		
+//		
+//		components.add(new Component(sortedX.get(k),sortedLength.get(0),
+//				sortedLength.get(1),sortedLength.get(2)));
+//		}
 	}
 	
 	public ArrayList<Double> getAnglesInComponent(Component c){
@@ -3098,11 +3284,7 @@ public class SVGProcessor {
 		elements.add(c.getBoundry2());
 		elements.add(c.getBoundry3());
 		elements.add(c.getBoundry4());
-//		elements = sortPointsX(elements);
-//		if(Math.abs(elements.get(0).getX() - elements.get(1).getX())
-//				< Math.abs(elements.get(0).getY() - elements.get(1).getY())){
-//			return 1;
-//		}
+
 		Point closest = new Point();
 		double distance = 1000;
 		for (int i = 1; i < elements.size(); i++) {
@@ -3229,13 +3411,30 @@ public class SVGProcessor {
 //	}
 	
 	public void constructResistorsDatabase() throws IOException{
-		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\resistor6.svg");
+//		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\power_source.svg");
+//		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\resistor6.svg");
+//		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\variable_resistor.svg");
+//		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\2nd_trial\\transistor.svg");
+//		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\resistor1.svg");
+//		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\resistor2.svg");
+//		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\resistor3.svg");
+//		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\resistor4.svg");
+//		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\resistor5.svg");
+		for (int i = 1; i < 7; i++) {
+			resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\2nd_trial\\resistor"+i+".svg");
+		}
+//		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\PowerSource_database\\powerSource1.svg");
+//		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\PowerSource_database\\powerSource2.svg");
 
-		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\resistor1.svg");
-		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\resistor2.svg");
-		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\resistor3.svg");
-		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\resistor4.svg");
-		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Resistors_database\\resistor5.svg");
+//		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Transistor_database\\transistor1.svg");
+//		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Transistor_database\\transistor2.svg");
+//		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Transistor_database\\transistor3.svg");
+
+//		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Capacitor_database\\capacitor1.svg");
+
+//		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Inductor_database\\inductor1.svg");
+//		resistorsPaths.add("C:\\Users\\omar\\Desktop\\bachelor\\Inductor_database\\inductor2.svg");
+
 		for (int i = 0; i < resistorsPaths.size(); i++) {
 			resistorsDatabase.add(new SVGProcessor(resistorsPaths.get(i)));
 		}
@@ -3250,7 +3449,7 @@ public class SVGProcessor {
 		openFile();
 		setOrigin();
 		setTranslateAndScale();
-		constructRelativePoints();
+		constructRelativePoints(0);
 		
 		constructActualPoints();
 //		System.out.println(actualPoints.size());
@@ -3299,7 +3498,8 @@ public class SVGProcessor {
 //			SVGProcessor file = new SVGProcessor("C:/Users/omar/Desktop/bachelor/220px-Series_circuit.svg");
 //			ReadFile file = new ReadFile("C:/Users/omar/Desktop/bachelor/reem.svg");
 //			SVGProcessor file = new SVGProcessor("test1.svg");
-			SVGProcessor file = new SVGProcessor("C:/Users/omar/Desktop/bachelor/OMARRRRR_2.svg");
+			SVGProcessor file = new SVGProcessor("C:/Users/omar/Desktop/bachelor/reem.svg");
+//			OMARRRRR_2
 //			String[] aryLines = file.openFile();
 //			String[] aryLines2 = file2.openFile();
 //			file2.constructRelativePoints();
