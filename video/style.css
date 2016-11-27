@@ -1,0 +1,153 @@
+/*div{
+	height: 500px;
+	width: 500px;
+}*/
+
+body{
+  background-color: grey;
+  /*transform: scale(1);*/
+}
+
+#sidebar{
+  width: 15%;
+  height: 100%;
+  background-color: #1c262f;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1;
+}
+.button{
+  display: block;
+  cursor: pointer;
+  text-align: center;
+  margin-top: 20px;
+  color: burlywood;
+  height: 30px;
+  padding-top: 8px;
+}
+.button:hover{
+  color: gold;
+  /*background: grey;*/
+}
+.active{
+  border-left-style: solid;
+  border-width: 5px;
+  border-color: whiburlywoodte;
+  /*color: gold;*/
+}
+/*.button:active{
+  background: grey;
+}*/
+#content{
+  height: 100%;
+  width: 70%;
+  position: relative;
+  left: 7%;
+}
+.top{
+  margin-top: 30%;
+}
+
+svg{
+	height: 500;
+  width: 1000px;
+  background-color: grey;
+  /*margin-left: 150px;*/
+}
+
+polyline {
+  stroke-dasharray: 50;
+  animation: dash 120s linear;
+  animation-direction: alternate;
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: 60000;
+  }
+}
+#content{
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#img1,#img2,#img3,#img4,#img5,#img6,#img7{
+  display: none;
+}
+
+/*#img1,#img2,#img3,#img4,#img5,#img6,#img7{
+  display: none;
+}*/
+.boundry{
+  fill:  lawngreen;
+}
+.corPoint{
+  fill: lawngreen;
+}
+.point{
+  fill: lawngreen;
+}
+.horLine,.verLine{
+  fill: lawngreen;
+}
+.node{
+  fill: lawngreen;
+}
+.value{
+  fill: firebrick;
+}
+polyline{
+  /*stroke: blue;*/
+}
+
+#switch, #switch2{
+  transform-origin: 0% 0%;
+}
+/*.switchLine,.switchTriangle{
+  animation-name: example;
+  animation-duration: 0.2s;
+}*/
+@keyframes example {
+    from {transform: rotate(0deg);}
+    to {transform: rotate(-41deg);}
+}
+
+.addSwitch{
+  animation-name: example;
+  animation-duration: 0.1s;
+  animation-fill-mode: forwards;
+}
+
+#img0 .boundry,#img0 .corPoint,#img0 .point,#img0 .horLine,#img0 .verLine,#img0 .node,#img0 .value,#img0 #switch,#img0 #switch2{
+  display: none;
+}
+
+#img1 .boundry,#img1 .corPoint,#img1 .horLine,#img1 .verLine,#img1 .node,#img1 .value,#img1 #switch,#img1 #switch2{
+  display: none;
+}
+
+#img2 .boundry,#img2 .horLine,#img2 .verLine,#img2 .node,#img2 .value,#img2 #switch,#img2 #switch2,#img2 .point{
+  display: none;
+}
+
+#img3 .boundry,#img3 .node,#img3 .value,#img3 #switch,#img3 #switch2,#img3 .point,#img3 .corPoint{
+  display: none;
+}
+
+#img4 .boundry,#img4 .value,#img4 #switch,#img4 #switch2,#img4 .point,#img4 .corPoint,#img4 .horLine,#img4 .verLine{
+  display: none;
+}
+
+#img5 .value,#img5 #switch,#img5 #switch2,#img5 .point,#img5 .corPoint,#img5 .horLine,#img5 .verLine,#img5 .node{
+  display: none;
+}
+
+#img6 .boundry,#img6 .corPoint,#img6 .point,#img6 .horLine,#img6 .verLine,#img6 .node,#img6 #switch,#img6 #switch2{
+  display: none;
+}
+#img7 .boundry,#img7 .corPoint,#img7 .point,#img7 .horLine,#img7 .verLine,#img7 .node{
+  display: none;
+}
+

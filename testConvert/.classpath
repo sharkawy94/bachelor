@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jre7"/>
+	<classpathentry kind="lib" path="C:/Program Files/Java/jre7/lib/okhttp-3.4.2.jar" sourcepath="C:/Users/omar/workspace2/ContactConvertAPI/okhttp-master/okhttp/src/main/java/okhttp3"/>
+	<classpathentry kind="lib" path="C:/Program Files/Java/jre7/lib/okio-1.11.0.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
